@@ -464,6 +464,7 @@ def result_page(job_id):
         scan=scan,
         friendly=friendly,
         loading=False,
+        job_id=job_id,
         history=get_history()
     )
 
