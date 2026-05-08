@@ -14,36 +14,65 @@ from urllib.parse import parse_qsl, urljoin, urlparse
 
 
 FEATURE_COLUMNS = [
-    "UsingIP",
-    "LongURL",
-    "ShortURL",
-    "Symbol@",
-    "Redirecting//",
-    "PrefixSuffix-",
-    "SubDomains",
-    "HTTPS",
-    "DomainRegLen",
-    "Favicon",
-    "NonStdPort",
-    "HTTPSDomainURL",
-    "RequestURL",
-    "AnchorURL",
-    "LinksInScriptTags",
-    "ServerFormHandler",
-    "InfoEmail",
-    "AbnormalURL",
-    "WebsiteForwarding",
-    "StatusBarCust",
-    "DisableRightClick",
-    "UsingPopupWindow",
-    "IframeRedirection",
-    "AgeofDomain",
-    "DNSRecording",
-    "WebsiteTraffic",
-    "PageRank",
-    "GoogleIndex",
-    "LinksPointingToPage",
-    "StatsReport",
+    "url_len",
+    "@",
+    "?",
+    "-",
+    "=",
+    ".",
+    "#",
+    "%",
+    "+",
+    "$",
+    "!",
+    "*",
+    ",",
+    "//",
+    "digits",
+    "letters",
+    "abnormal_url",
+    "https",
+    "Shortining_Service",
+    "having_ip_address",
+    "web_http_status",
+    "web_is_live",
+    "web_ext_ratio",
+    "web_unique_domains",
+    "web_favicon",
+    "web_csp",
+    "web_xframe",
+    "web_hsts",
+    "web_xcontent",
+    "web_security_score",
+    "web_forms_count",
+    "web_password_fields",
+    "web_hidden_inputs",
+    "web_has_login",
+    "web_ssl_valid",
+    "phish_urgency_words",
+    "phish_security_words",
+    "phish_brand_mentions",
+    "phish_brand_hijack",
+    "phish_multiple_subdomains",
+    "phish_long_path",
+    "phish_many_params",
+    "phish_suspicious_tld",
+    "phish_adv_exact_brand_match",
+    "phish_adv_brand_in_subdomain",
+    "phish_adv_brand_in_path",
+    "phish_adv_hyphen_count",
+    "phish_adv_number_count",
+    "phish_adv_suspicious_tld",
+    "phish_adv_long_domain",
+    "phish_adv_many_subdomains",
+    "phish_adv_encoded_chars",
+    "phish_adv_path_keywords",
+    "phish_adv_has_redirect",
+    "phish_adv_many_params",
+    "path_has_hacked_terms",
+    "suspicious_extension",
+    "path_underscore_count",
+    "is_gov_edu"
 ]
 
 SUSPICIOUS_TOKENS = {
@@ -897,65 +926,74 @@ def build_ml_feature_vector(
     domain_host: dict[str, Any],
     reachability: dict[str, Any],
     redirect_check: dict[str, Any],
-) -> dict[str, int]:
-    hops = len(redirect_check.get("hops", []))
-    external_anchor_ratio = float(page_dom.get("external_anchor_ratio", 0.0) or 0.0)
-    external_script_ratio = float(page_dom.get("external_script_ratio", 0.0) or 0.0)
-    external_form_ratio = float(page_dom.get("external_form_action_ratio", 0.0) or 0.0)
+) -> dict[str, int | float]:
+    import re
+    url = re.sub(r"^https?://", "", normalized_url)
 
-    anchor_count = int(page_dom.get("anchor_count", 0) or 0)
-    iframe_count = int(page_dom.get("iframe_count", 0) or 0)
+    # Calculate basic lexical counts
+    char_counts = {c: url.count(c) for c in ['@', '?', '-', '=', '.', '#', '%', '+', '$', '!', '*', ',', '//']}
+    digits_count = sum(c.isdigit() for c in url)
+    letters_count = sum(c.isalpha() for c in url)
 
-    domain_age_days = domain_host.get("domain_age_days")
-    expires_in_days = domain_host.get("domain_expires_in_days")
-
-    feature_vector = {
-        "UsingIP": -1 if url_lexical.get("has_ip_host") else 1,
-        "LongURL": _threshold_map(float(url_lexical.get("url_length", 0)), 54, 75),
-        "ShortURL": -1 if url_lexical.get("shortener_hint") else 1,
-        "Symbol@": -1 if url_lexical.get("has_at_symbol") else 1,
-        "Redirecting//": -1 if url_lexical.get("double_slash_redirect_hint") else 1,
-        "PrefixSuffix-": -1 if url_lexical.get("has_hyphenated_domain") else 1,
-        "SubDomains": 1 if url_lexical.get("subdomain_depth", 0) <= 1 else (0 if url_lexical.get("subdomain_depth", 0) == 2 else -1),
-        "HTTPS": 1 if url_lexical.get("scheme") == "https" else -1,
-        "DomainRegLen": 1 if (expires_in_days is not None and expires_in_days >= 365) else (-1 if expires_in_days is None or expires_in_days < 90 else 0),
-        "Favicon": 1 if float(page_dom.get("external_favicon_ratio", 0.0) or 0.0) <= 0.3 else -1,
-        "NonStdPort": -1 if url_lexical.get("has_non_standard_port") else 1,
-        "HTTPSDomainURL": -1 if url_lexical.get("https_in_hostname") else 1,
-        "RequestURL": _threshold_map(external_anchor_ratio, 0.22, 0.61),
-        "AnchorURL": _threshold_map(external_anchor_ratio, 0.31, 0.67),
-        "LinksInScriptTags": _threshold_map(external_script_ratio, 0.17, 0.81),
-        "ServerFormHandler": -1 if external_form_ratio > 0.5 else 1,
-        "InfoEmail": -1 if int(page_dom.get("mailto_links", 0) or 0) > 0 else 1,
-        # AbnormalURL: in training data, -1 means the URL hostname doesn't match WHOIS registrant.
-        # We approximate: if WHOIS is unavailable OR domain is very new, treat as -1 (suspicious).
-        # If WHOIS confirms a mature domain, treat as 1 (normal).
-        "AbnormalURL": 1 if (domain_host.get("whois_available") and domain_age_days is not None and domain_age_days >= 30) else -1,
-        "WebsiteForwarding": 1 if hops <= 1 else (0 if hops <= 3 else -1),
-        "StatusBarCust": -1 if int(page_dom.get("statusbar_signal_count", 0) or 0) > 0 else 1,
-        "DisableRightClick": -1 if bool(page_dom.get("right_click_blocked")) else 1,
-        "UsingPopupWindow": -1 if int(page_dom.get("popup_signal_count", 0) or 0) > 0 else 1,
-        "IframeRedirection": 1 if iframe_count == 0 else (0 if iframe_count <= 2 else -1),
-        "AgeofDomain": 1 if (domain_age_days is not None and domain_age_days >= 180) else -1,
-        "DNSRecording": 1 if domain_host.get("whois_available") else -1,
-        # WebsiteTraffic: training dataset used Alexa rank. -1 = no rank (low traffic / unknown).
-        # We approximate: if DNS resolves AND whois available AND domain is mature = known site.
-        "WebsiteTraffic": 1 if (domain_host.get("dns_resolved") and domain_host.get("whois_available") and domain_age_days is not None and domain_age_days >= 365) else (0 if domain_host.get("dns_resolved") else -1),
-        # PageRank: training data had -1 for low/no PageRank (most phishing sites).
-        # We can't query Google PageRank live, so we use a heuristic proxy:
-        # mature domain (2+ years) + WHOIS available = likely has some rank.
-        "PageRank": 1 if (domain_age_days is not None and domain_age_days >= 730 and domain_host.get("whois_available")) else (-1 if (domain_age_days is None or domain_age_days < 180) else 0),
-        "GoogleIndex": 1 if reachability.get("state") == "reachable" else (0 if reachability.get("state") == "timeout" else -1),
-        "LinksPointingToPage": 1 if anchor_count >= 2 else (0 if anchor_count == 1 else -1),
-        "StatsReport": 1,
+    has_https = 1 if url_lexical.get("scheme") == "https" else 0
+    is_live = 1 if reachability.get("state") == "reachable" else 0
+    
+    # Calculate some heuristic advanced features
+    path_underscore_count = url_lexical.get("path_depth", 0) # approximation
+    
+    vec = {
+        "url_len": len(url),
+        "digits": digits_count,
+        "letters": letters_count,
+        "abnormal_url": 1 if domain_host.get("whois_available") else 0,
+        "https": has_https,
+        "Shortining_Service": 1 if url_lexical.get("shortener_hint") else 0,
+        "having_ip_address": 1 if url_lexical.get("has_ip_host") else 0,
+        "web_http_status": 200 if is_live else 0,
+        "web_is_live": is_live,
+        "web_ext_ratio": float(page_dom.get("external_anchor_ratio", 0.0) or 0.0),
+        "web_unique_domains": int(page_dom.get("anchor_count", 0) or 0),
+        "web_favicon": 1 if float(page_dom.get("external_favicon_ratio", 0.0) or 0.0) > 0 else 0,
+        "web_csp": 0,
+        "web_xframe": 0,
+        "web_hsts": 0,
+        "web_xcontent": 0,
+        "web_security_score": 0,
+        "web_forms_count": int(page_dom.get("form_count", 0) or 0),
+        "web_password_fields": int(page_dom.get("password_input_count", 0) or 0),
+        "web_hidden_inputs": int(page_dom.get("hidden_element_count", 0) or 0),
+        "web_has_login": 1 if int(page_dom.get("password_input_count", 0) or 0) > 0 else 0,
+        "web_ssl_valid": has_https,
+        "phish_urgency_words": 0,
+        "phish_security_words": 0,
+        "phish_brand_mentions": 0,
+        "phish_brand_hijack": 0,
+        "phish_multiple_subdomains": 1 if url_lexical.get("subdomain_depth", 0) > 1 else 0,
+        "phish_long_path": 1 if url_lexical.get("path_depth", 0) > 3 else 0,
+        "phish_many_params": 1 if url_lexical.get("query_param_count", 0) > 2 else 0,
+        "phish_suspicious_tld": 0,
+        "phish_adv_exact_brand_match": 0,
+        "phish_adv_brand_in_subdomain": 0,
+        "phish_adv_brand_in_path": 0,
+        "phish_adv_hyphen_count": url.count('-'),
+        "phish_adv_number_count": digits_count,
+        "phish_adv_suspicious_tld": 0,
+        "phish_adv_long_domain": 1 if len(domain_host.get("host", "")) > 30 else 0,
+        "phish_adv_many_subdomains": 1 if url_lexical.get("subdomain_depth", 0) > 2 else 0,
+        "phish_adv_encoded_chars": url.count('%'),
+        "phish_adv_path_keywords": 0,
+        "phish_adv_has_redirect": 1 if url.count('//') > 1 else 0,
+        "phish_adv_many_params": 1 if url_lexical.get("query_param_count", 0) > 3 else 0,
+        "path_has_hacked_terms": 0,
+        "suspicious_extension": 0,
+        "path_underscore_count": url.count('_'),
+        "is_gov_edu": 1 if domain_host.get("tld", "") in ["gov", "edu"] else 0,
     }
-
-    for name in FEATURE_COLUMNS:
-        if name not in feature_vector:
-            feature_vector[name] = 0
-        feature_vector[name] = int(feature_vector[name])
-
-    return feature_vector
+    
+    for c in ['@', '?', '-', '=', '.', '#', '%', '+', '$', '!', '*', ',', '//']:
+        vec[c] = char_counts[c]
+        
+    return vec
 
 
 def load_model_bundle(force_reload: bool = False) -> tuple[dict[str, Any] | None, str]:

@@ -42,8 +42,7 @@ Response keys:
 - top_signals
 - errors
 
-Run automated tests:
-- python -m unittest discover -s tests -v
+
 
 Run runtime benchmark (for performance evidence):
 - python benchmark_scans.py --repeats 1
