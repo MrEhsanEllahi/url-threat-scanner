@@ -119,6 +119,483 @@
       border-radius: 999px;
     }
 
+    /* ── Nav menu ── */
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+      letter-spacing: 0.01em;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    .nav-cta {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c4b5fd;
+      text-decoration: none;
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(124,58,237,0.35);
+      background: rgba(124,58,237,0.08);
+      transition: all 0.2s;
+      letter-spacing: 0.01em;
+    }
+
+    .nav-cta:hover {
+      background: rgba(124,58,237,0.18);
+      border-color: rgba(124,58,237,0.6);
+      color: #e0d7ff;
+    }
+
+    .nav-menu-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s cubic-bezier(.22,1,.36,1), transform 0.65s cubic-bezier(.22,1,.36,1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.18s; }
+    .reveal-delay-3 { transition-delay: 0.26s; }
+    .reveal-delay-4 { transition-delay: 0.34s; }
+    .reveal-delay-5 { transition-delay: 0.42s; }
+    .reveal-delay-6 { transition-delay: 0.50s; }
+
+    /* ── Section shared ── */
+    .lp-section {
+      padding: 100px 0 0;
+    }
+
+    .lp-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 5px 14px;
+      margin-bottom: 20px;
+    }
+
+    .lp-eyebrow.purple {
+      color: #a78bfa;
+      background: rgba(124,58,237,0.1);
+      border: 1px solid rgba(124,58,237,0.2);
+    }
+
+    .lp-eyebrow.cyan {
+      color: var(--accent2);
+      background: rgba(6,182,212,0.1);
+      border: 1px solid rgba(6,182,212,0.2);
+    }
+
+    .lp-eyebrow.green {
+      color: #34d399;
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+
+    .lp-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -1.2px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .lp-subtitle {
+      font-size: 16px;
+      color: var(--text-dim);
+      line-height: 1.75;
+      max-width: 560px;
+    }
+
+    /* ── About section ── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      margin-top: 56px;
+    }
+
+    .about-feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 36px;
+    }
+
+    .about-feature {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .about-feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .about-feature-icon.purple { background: rgba(124,58,237,0.15); }
+    .about-feature-icon.cyan { background: rgba(6,182,212,0.15); }
+    .about-feature-icon.green { background: rgba(16,185,129,0.15); }
+    .about-feature-icon.amber { background: rgba(245,158,11,0.15); }
+
+    .about-feature-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .about-feature-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .about-visual {
+      position: relative;
+    }
+
+    .about-terminal {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border-bright);
+      border-radius: 20px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .terminal-bar {
+      background: rgba(255,255,255,0.05);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .terminal-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .terminal-dot:nth-child(1) { background: #ef4444; }
+    .terminal-dot:nth-child(2) { background: #f59e0b; }
+    .terminal-dot:nth-child(3) { background: #22c55e; }
+
+    .terminal-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 6px;
+      font-weight: 500;
+    }
+
+    .terminal-body {
+      padding: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 12.5px;
+      line-height: 1.9;
+    }
+
+    .t-dim { color: #4b5563; }
+    .t-purple { color: #a78bfa; }
+    .t-cyan { color: #67e8f9; }
+    .t-green { color: #34d399; }
+    .t-red { color: #f87171; }
+    .t-white { color: #e5e7eb; }
+    .t-amber { color: #fbbf24; }
+
+    .terminal-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: #a78bfa;
+      animation: blink 1.1s step-end infinite;
+      vertical-align: middle;
+      border-radius: 1px;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ── Why section ── */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+
+    .why-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      transition: border-color 0.25s, background 0.25s, transform 0.25s;
+      cursor: default;
+    }
+
+    .why-card:hover {
+      border-color: var(--border-bright);
+      background: var(--surface-hover);
+      transform: translateY(-4px);
+    }
+
+    .why-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .why-card-num {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+    }
+
+    .why-card-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .why-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .why-card-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ── Flow section ── */
+    .flow-steps {
+      margin-top: 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+
+    .flow-steps::before {
+      content: '';
+      position: absolute;
+      left: 27px;
+      top: 28px;
+      bottom: 28px;
+      width: 2px;
+      background: linear-gradient(to bottom,
+        rgba(124,58,237,0.6) 0%,
+        rgba(6,182,212,0.6) 50%,
+        rgba(16,185,129,0.4) 100%);
+      border-radius: 2px;
+    }
+
+    .flow-step {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+      padding: 8px 0 32px;
+      position: relative;
+    }
+
+    .flow-step:last-child { padding-bottom: 0; }
+
+    .flow-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .flow-num.purple { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+    .flow-num.cyan { background: rgba(6,182,212,0.2); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
+    .flow-num.blue { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+    .flow-num.violet { background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
+    .flow-num.indigo { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+    .flow-num.green { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+
+    .flow-content {
+      padding-top: 10px;
+      flex: 1;
+    }
+
+    .flow-content-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: -0.2px;
+    }
+
+    .flow-content-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 560px;
+    }
+
+    .flow-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .flow-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+    }
+
+    /* ── CTA band ── */
+    .cta-band {
+      margin-top: 100px;
+      border-radius: 24px;
+      padding: 60px 48px;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(6,182,212,0.08));
+      border: 1px solid rgba(124,58,237,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-band::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 240px; height: 240px;
+      border-radius: 50%;
+      background: rgba(124,58,237,0.12);
+      filter: blur(40px);
+    }
+
+    .cta-band::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: -60px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(6,182,212,0.1);
+      filter: blur(40px);
+    }
+
+    .cta-band h2 {
+      font-size: clamp(22px, 3.5vw, 36px);
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-band p {
+      font-size: 15px;
+      color: var(--text-dim);
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-band-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--accent), #5b21b6);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 16px 36px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 24px rgba(124,58,237,0.4);
+      position: relative;
+      z-index: 1;
+      letter-spacing: 0.01em;
+    }
+
+    .cta-band-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(124,58,237,0.5);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .about-grid { grid-template-columns: 1fr; gap: 40px; }
+      .about-visual { display: none; }
+      .why-grid { grid-template-columns: 1fr; }
+      .flow-steps::before { left: 22px; }
+      .flow-num { width: 46px; height: 46px; font-size: 15px; border-radius: 12px; }
+      .nav-center { display: none; }
+      .cta-band { padding: 40px 24px; }
+    }
+
+    @media (max-width: 900px) {
+      .why-grid { grid-template-columns: 1fr 1fr; }
+    }
+
     /* ── Hero ── */
     .hero {
       text-align: center;
@@ -810,12 +1287,24 @@
       </div>
       <span class="logo-name">ShieldScan</span>
     </a>
+
+    {% if not loading and not status %}
+    <div class="nav-center">
+      <a href="#about" class="nav-link">About</a>
+      <a href="#why" class="nav-link">Why It Matters</a>
+      <a href="#how-it-works" class="nav-link">How It Works</a>
+    </div>
+    <div class="nav-menu-right">
+      <a href="#scanner" class="nav-cta">Scan a URL</a>
+    </div>
+    {% else %}
     <span class="nav-badge">Threat Intelligence</span>
+    {% endif %}
   </nav>
 
   <!-- Hero / Scanner -->
   {% if not loading and not status %}
-  <div class="hero">
+  <div class="hero" id="scanner">
     <div class="hero-eyebrow">Live Phishing Detection</div>
     <h1>Is this URL safe<br>to click?</h1>
     <p>Paste any link and get an instant AI-powered phishing risk analysis with plain-language explanations.</p>
@@ -890,6 +1379,271 @@
     </div>
     {% endif %}
   </div>
+
+  <!-- ══════════════════════════════════════════
+       ABOUT SECTION
+  ══════════════════════════════════════════ -->
+  <section class="lp-section" id="about">
+    <div class="about-grid">
+      <div>
+        <div class="lp-eyebrow purple reveal">What is ShieldScan</div>
+        <h2 class="lp-title reveal reveal-delay-1">Built for the modern<br>threat landscape.</h2>
+        <p class="lp-subtitle reveal reveal-delay-2">ShieldScan is a dual-layer phishing detection engine that combines machine learning with real-time URL, DOM, and domain analysis — giving you a plain-language verdict in seconds.</p>
+
+        <div class="about-feature-list">
+          <div class="about-feature reveal reveal-delay-2">
+            <div class="about-feature-icon purple">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <div>
+              <div class="about-feature-title">Real-time Analysis</div>
+              <div class="about-feature-desc">Scans are processed on-demand in seconds. No queues, no waiting — just immediate threat intelligence when you need it.</div>
+            </div>
+          </div>
+          <div class="about-feature reveal reveal-delay-3">
+            <div class="about-feature-icon cyan">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div>
+              <div class="about-feature-title">Dual-Layer Detection</div>
+              <div class="about-feature-desc">Layer 1 is a trained ML classifier. Layer 2 is a content-threat engine that reads actual page text and DOM to catch what the model alone might miss.</div>
+            </div>
+          </div>
+          <div class="about-feature reveal reveal-delay-4">
+            <div class="about-feature-icon green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div>
+              <div class="about-feature-title">Full PDF Report</div>
+              <div class="about-feature-desc">Export a detailed, structured PDF for every completed scan — including signal evidence, WHOIS data, model statistics, and a page screenshot.</div>
+            </div>
+          </div>
+          <div class="about-feature reveal reveal-delay-5">
+            <div class="about-feature-icon amber">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+              <div class="about-feature-title">Plain-Language Verdicts</div>
+              <div class="about-feature-desc">No jargon. Every result is translated into a clear headline, risk level, and evidence list that anyone can understand without a security background.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-visual reveal reveal-delay-2">
+        <div class="about-terminal">
+          <div class="terminal-bar">
+            <div class="terminal-dot"></div>
+            <div class="terminal-dot"></div>
+            <div class="terminal-dot"></div>
+            <span class="terminal-title">shieldscan — scan engine</span>
+          </div>
+          <div class="terminal-body">
+            <div><span class="t-dim">$</span> <span class="t-purple">shieldscan</span> <span class="t-cyan">scan</span> https://suspicious-login.xyz</div>
+            <div class="t-dim">&nbsp;</div>
+            <div><span class="t-dim">›</span> <span class="t-white">Validating URL...</span> <span class="t-green">✓</span></div>
+            <div><span class="t-dim">›</span> <span class="t-white">Extracting lexical features...</span> <span class="t-green">✓</span></div>
+            <div><span class="t-dim">›</span> <span class="t-white">Querying WHOIS records...</span> <span class="t-green">✓</span></div>
+            <div><span class="t-dim">›</span> <span class="t-white">Running browser simulation...</span> <span class="t-green">✓</span></div>
+            <div><span class="t-dim">›</span> <span class="t-white">Building ML feature vector...</span> <span class="t-green">✓</span></div>
+            <div><span class="t-dim">›</span> <span class="t-white">Evaluating phishing model...</span> <span class="t-green">✓</span></div>
+            <div><span class="t-dim">›</span> <span class="t-white">Analyzing page content...</span> <span class="t-green">✓</span></div>
+            <div class="t-dim">&nbsp;</div>
+            <div><span class="t-amber">VERDICT</span> <span class="t-red">HIGH RISK</span></div>
+            <div><span class="t-dim">risk_score:</span> <span class="t-red">87.4%</span></div>
+            <div><span class="t-dim">confidence:</span> <span class="t-white">91.2%</span></div>
+            <div><span class="t-dim">signals:</span> &nbsp;<span class="t-cyan">AgeOfDomain</span> <span class="t-red">↑risk</span></div>
+            <div><span class="t-dim">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="t-cyan">SubDomains</span> &nbsp;<span class="t-red">↑risk</span></div>
+            <div><span class="t-dim">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="t-cyan">HTTPS</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-green">↓safe</span></div>
+            <div class="t-dim">&nbsp;</div>
+            <div><span class="t-dim">$</span> <span class="terminal-cursor"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       WHY SECTION
+  ══════════════════════════════════════════ -->
+  <section class="lp-section" id="why">
+    <div class="reveal">
+      <div class="lp-eyebrow cyan">Why It Matters</div>
+      <h2 class="lp-title">Phishing is the #1 entry<br>point for cyberattacks.</h2>
+      <p class="lp-subtitle">A single malicious link can compromise credentials, install malware, or drain a bank account. Most people click before they think.</p>
+    </div>
+
+    <div class="why-grid">
+      <div class="why-card reveal reveal-delay-1">
+        <div class="why-card-icon" style="background:rgba(239,68,68,0.12);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="why-card-num" style="color:#f87171;">3.4B</div>
+        <div class="why-card-label">Phishing emails sent daily</div>
+        <div class="why-card-title">Staggering volume</div>
+        <div class="why-card-desc">Phishing emails account for over 80% of reported security incidents globally. Attackers send billions of lures every single day.</div>
+      </div>
+
+      <div class="why-card reveal reveal-delay-2">
+        <div class="why-card-icon" style="background:rgba(245,158,11,0.12);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="why-card-num" style="color:#fbbf24;">36%</div>
+        <div class="why-card-label">Of breaches start with phishing</div>
+        <div class="why-card-title">The primary vector</div>
+        <div class="why-card-desc">More than a third of all data breaches begin with a phishing link. It's consistently the most effective initial access technique for attackers.</div>
+      </div>
+
+      <div class="why-card reveal reveal-delay-3">
+        <div class="why-card-icon" style="background:rgba(124,58,237,0.12);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div class="why-card-num" style="color:#a78bfa;">$4.9M</div>
+        <div class="why-card-label">Average cost per breach</div>
+        <div class="why-card-title">Enormous financial damage</div>
+        <div class="why-card-desc">The average cost of a data breach reached $4.9M in 2024. For SMBs, a single successful phishing attack can be fatal to the business.</div>
+      </div>
+
+      <div class="why-card reveal reveal-delay-1">
+        <div class="why-card-icon" style="background:rgba(6,182,212,0.12);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="why-card-num" style="color:#67e8f9;">20s</div>
+        <div class="why-card-label">How fast phishing sites appear</div>
+        <div class="why-card-title">Lightning-fast deployment</div>
+        <div class="why-card-desc">A new phishing site is created every 20 seconds. Traditional blacklists can't keep up — which is why behaviour-based ML detection is essential.</div>
+      </div>
+
+      <div class="why-card reveal reveal-delay-2">
+        <div class="why-card-icon" style="background:rgba(16,185,129,0.12);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="why-card-num" style="color:#34d399;">97%</div>
+        <div class="why-card-label">Of users can't spot phishing</div>
+        <div class="why-card-title">Human error is universal</div>
+        <div class="why-card-desc">Studies show 97% of people cannot reliably identify a phishing email. Security awareness alone is not a defence — automated analysis is.</div>
+      </div>
+
+      <div class="why-card reveal reveal-delay-3">
+        <div class="why-card-icon" style="background:rgba(239,68,68,0.12);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="why-card-num" style="color:#f87171;">+150%</div>
+        <div class="why-card-label">Rise in mobile phishing</div>
+        <div class="why-card-title">Growing attack surface</div>
+        <div class="why-card-desc">Mobile phishing attacks have grown 150%+ year-over-year. Smaller screens make deceptive URLs even harder to spot without a tool like this.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       HOW IT WORKS (FLOW) SECTION
+  ══════════════════════════════════════════ -->
+  <section class="lp-section" id="how-it-works">
+    <div class="reveal">
+      <div class="lp-eyebrow green">How It Works</div>
+      <h2 class="lp-title">Six stages of<br>threat analysis.</h2>
+      <p class="lp-subtitle">Every scan runs through a structured pipeline. Each stage adds evidence — from URL structure to live page content — before a final verdict is produced.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:56px;align-items:start;">
+      <div class="flow-steps">
+        <div class="flow-step reveal reveal-delay-1">
+          <div class="flow-num purple">1</div>
+          <div class="flow-content">
+            <div class="flow-content-title">URL Validation &amp; Normalisation</div>
+            <div class="flow-content-desc">The submitted link is cleaned, validated, and normalised. Private IPs, localhost addresses, and malformed inputs are rejected immediately.</div>
+            <div class="flow-tags">
+              <span class="flow-tag">Scheme check</span>
+              <span class="flow-tag">IP gate</span>
+              <span class="flow-tag">Redirect pre-check</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step reveal reveal-delay-2">
+          <div class="flow-num cyan">2</div>
+          <div class="flow-content">
+            <div class="flow-content-title">Lexical Feature Extraction</div>
+            <div class="flow-content-desc">30+ structural features are extracted from the URL string itself — length, special characters, subdomain depth, suspicious tokens, TLD risk, and more.</div>
+            <div class="flow-tags">
+              <span class="flow-tag">URL length</span>
+              <span class="flow-tag">Hyphen count</span>
+              <span class="flow-tag">Token analysis</span>
+              <span class="flow-tag">TLD risk</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step reveal reveal-delay-3">
+          <div class="flow-num blue">3</div>
+          <div class="flow-content">
+            <div class="flow-content-title">Domain &amp; WHOIS Intelligence</div>
+            <div class="flow-content-desc">The domain is resolved via DNS, registration metadata is fetched from WHOIS, and signals like domain age, registrar, and country are recorded.</div>
+            <div class="flow-tags">
+              <span class="flow-tag">DNS resolution</span>
+              <span class="flow-tag">Domain age</span>
+              <span class="flow-tag">Registrar check</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-steps" style="margin-top:0;">
+        <div class="flow-step reveal reveal-delay-2">
+          <div class="flow-num violet">4</div>
+          <div class="flow-content">
+            <div class="flow-content-title">Browser Simulation &amp; DOM Extraction</div>
+            <div class="flow-content-desc">A headless browser loads the page and extracts DOM features — form counts, password fields, external resource ratios, iframes, and a screenshot.</div>
+            <div class="flow-tags">
+              <span class="flow-tag">Headless Chrome</span>
+              <span class="flow-tag">DOM features</span>
+              <span class="flow-tag">Screenshot</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step reveal reveal-delay-3">
+          <div class="flow-num indigo">5</div>
+          <div class="flow-content">
+            <div class="flow-content-title">Machine Learning Inference</div>
+            <div class="flow-content-desc">All collected features are assembled into a vector and fed to the trained ML classifier. It outputs a phishing probability score, confidence, and top signal weights.</div>
+            <div class="flow-tags">
+              <span class="flow-tag">Random Forest</span>
+              <span class="flow-tag">Risk score</span>
+              <span class="flow-tag">Feature importance</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step reveal reveal-delay-4">
+          <div class="flow-num green">6</div>
+          <div class="flow-content">
+            <div class="flow-content-title">Content Threat Classification</div>
+            <div class="flow-content-desc">The extracted page text is scanned for threat categories — credential phishing, financial scam, fake shops, gambling, and more — using a keyword-weighted scoring engine.</div>
+            <div class="flow-tags">
+              <span class="flow-tag">Layer 2 detection</span>
+              <span class="flow-tag">Keyword scoring</span>
+              <span class="flow-tag">Threat categories</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       CTA BAND
+  ══════════════════════════════════════════ -->
+  <div class="cta-band reveal" style="margin-bottom: 0;">
+    <h2>Ready to check a link?</h2>
+    <p>Paste any URL and get an instant risk verdict — completely free, no login required.</p>
+    <a href="#scanner" class="cta-band-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Scan a URL Now
+    </a>
+  </div>
+
   {% endif %}
 
   <!-- Scan bar when loading/result page -->
@@ -1166,9 +1920,97 @@
   {% endif %}
 
   <footer>
-    ShieldScan &mdash; URL Threat Intelligence &middot; Built with ML + heuristic analysis
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="logo-icon" style="width:28px;height:28px;border-radius:8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <span style="font-size:13px;font-weight:600;color:var(--text-dim);">ShieldScan</span>
+      </div>
+      <div style="display:flex;gap:24px;">
+        <a href="#about" style="font-size:12px;color:var(--text-muted);text-decoration:none;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">About</a>
+        <a href="#why" style="font-size:12px;color:var(--text-muted);text-decoration:none;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">Why It Matters</a>
+        <a href="#how-it-works" style="font-size:12px;color:var(--text-muted);text-decoration:none;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">How It Works</a>
+      </div>
+      <span style="font-size:12px;color:var(--text-muted);">URL Threat Intelligence &middot; ML + heuristic analysis</span>
+    </div>
   </footer>
 
 </div>
+
+<script>
+  // ── Smooth scroll for anchor links ──
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // ── Scroll-reveal with IntersectionObserver ──
+  const revealEls = document.querySelectorAll('.reveal');
+  if (revealEls.length) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    revealEls.forEach(el => observer.observe(el));
+  }
+
+  // ── Sticky nav highlight ──
+  const navLinks = document.querySelectorAll('.nav-link');
+  const sections = ['about', 'why', 'how-it-works'].map(id => document.getElementById(id)).filter(Boolean);
+
+  if (sections.length && navLinks.length) {
+    const navObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(l => l.style.color = '');
+          const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+          if (active) active.style.color = '#e0d7ff';
+        }
+      });
+    }, { threshold: 0.4 });
+
+    sections.forEach(s => navObserver.observe(s));
+  }
+
+  // ── Animate terminal lines sequentially ──
+  const termLines = document.querySelectorAll('.terminal-body > div');
+  if (termLines.length) {
+    termLines.forEach((line, i) => {
+      line.style.opacity = '0';
+      line.style.transform = 'translateX(-6px)';
+      line.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    });
+
+    const termEl = document.querySelector('.about-terminal');
+    if (termEl) {
+      const termObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          termLines.forEach((line, i) => {
+            setTimeout(() => {
+              line.style.opacity = '1';
+              line.style.transform = 'translateX(0)';
+            }, i * 90);
+          });
+          termObserver.disconnect();
+        }
+      }, { threshold: 0.3 });
+      termObserver.observe(termEl);
+    }
+  }
+</script>
+
 </body>
 </html>
