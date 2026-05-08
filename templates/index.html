@@ -764,6 +764,30 @@
       margin-bottom: 8px;
     }
 
+    /* ── PDF export button ── */
+    .pdf-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(6,182,212,0.1));
+      border: 1px solid rgba(124,58,237,0.35);
+      color: #c4b5fd;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 18px;
+      border-radius: 10px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .pdf-btn:hover {
+      background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(6,182,212,0.18));
+      border-color: rgba(124,58,237,0.6);
+      color: #e0d7ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(124,58,237,0.25);
+    }
+
     @media (max-width: 640px) {
       .stats-row { gap: 24px; }
       .scan-another-row { flex-direction: column; align-items: flex-start; }
@@ -876,9 +900,17 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         Scan Another URL
       </a>
-      {% if not loading and status %}
-      <span style="font-size:13px;color:var(--text-muted);">Scanning: <span style="color:var(--text-dim);font-weight:500;">{{ input_url }}</span></span>
-      {% endif %}
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        {% if not loading and status == 'ok' and friendly.level in ['High Risk','Needs Caution','Likely Safe','Content Risk'] %}
+        <a href="/pdf/{{ job_id }}" class="pdf-btn" target="_blank">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Export PDF Report
+        </a>
+        {% endif %}
+        {% if not loading and status %}
+        <span style="font-size:13px;color:var(--text-muted);">Scanned: <span style="color:var(--text-dim);font-weight:500;">{{ input_url }}</span></span>
+        {% endif %}
+      </div>
     </div>
   </div>
   {% endif %}

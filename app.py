@@ -6,9 +6,10 @@ import threading
 import uuid
 from datetime import datetime
 
-from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask import Flask, jsonify, redirect, render_template, request, url_for, make_response
 
 from scan_engine import empty_scan_response, normalize_and_validate_url, run_canonical_scan
+from pdf_report import build_pdf
 
 app = Flask(__name__)
 job_store = {}
@@ -484,6 +485,40 @@ def api_scan():
     scan = run_canonical_scan(input_url)
     status_code = 200 if scan["validation"]["ok"] else 400
     return jsonify(scan), status_code
+
+
+EXPORTABLE_LEVELS = {"High Risk", "Needs Caution", "Likely Safe", "Content Risk"}
+
+@app.route("/pdf/<job_id>", methods=["GET"])
+def export_pdf(job_id):
+    job = job_store.get(job_id)
+    if not job or not job.get("done"):
+        return "Scan not found or not yet complete.", 404
+
+    scan = job.get("scan")
+    friendly = job.get("friendly")
+    if not scan or not friendly:
+        return "No scan data available.", 404
+
+    level = friendly.get("level", "")
+    if level not in EXPORTABLE_LEVELS:
+        return "PDF export is only available for completed scans with a definitive result.", 400
+
+    try:
+        input_url = job.get("input_url", "")
+        pdf_bytes = build_pdf(scan, friendly, input_url)
+    except Exception as e:
+        return f"PDF generation failed: {e}", 500
+
+    safe_host = (scan.get("validation") or {}).get("normalized_url", "scan")
+    safe_host = safe_host.replace("https://", "").replace("http://", "").split("/")[0]
+    safe_host = "".join(c if c.isalnum() or c in "-_." else "_" for c in safe_host)[:40]
+    filename = f"shieldscan_{safe_host}.pdf"
+
+    response = make_response(pdf_bytes)
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
 
 
 if __name__ == "__main__":
