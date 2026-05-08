@@ -3,233 +3,1140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>URL Threat Scanner</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-100 text-slate-900">
-  <main class="mx-auto min-h-screen w-full max-w-[90rem] px-4 py-10 sm:px-6 lg:px-8">
-    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Cybersecurity FYP Application</p>
-      <a href="/" class="inline-block mt-2 text-3xl font-semibold tracking-tight hover:text-indigo-600 transition">URL Threat Scanner</a>
-      <p class="mt-2 text-sm text-slate-600">Paste a link to get a simple phishing risk decision in plain language.</p>
+  <title>ShieldScan — URL Threat Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      {% if not loading and not status %}
-      <form action="/" method="post" class="mt-6 space-y-3">
-        <label for="url" class="block text-sm font-medium text-slate-700">Website URL</label>
-        <div class="flex flex-col gap-3 sm:flex-row">
+    :root {
+      --bg: #07080f;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-bright: rgba(255,255,255,0.15);
+      --text: #f0f2ff;
+      --text-muted: #6b7280;
+      --text-dim: #9ca3af;
+      --accent: #7c3aed;
+      --accent2: #06b6d4;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --safe: #10b981;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background aurora ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% -10%, rgba(124,58,237,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 10%, rgba(6,182,212,0.12) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 100%, rgba(124,58,237,0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Grid overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(124,58,237,0.4);
+    }
+
+    .logo-icon svg { width: 18px; height: 18px; }
+
+    .logo-name {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, #e0d7ff, var(--text));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-badge {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(6,182,212,0.1);
+      border: 1px solid rgba(6,182,212,0.2);
+      border-radius: 999px;
+      padding: 6px 14px;
+      margin-bottom: 28px;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--accent2);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent2);
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 68px);
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      background: linear-gradient(160deg, #ffffff 0%, #c4b5fd 50%, #67e8f9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+
+    /* ── Scanner input ── */
+    .scanner-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .scanner-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-bright);
+      border-radius: 20px;
+      padding: 8px 8px 8px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      backdrop-filter: blur(12px);
+    }
+
+    .scanner-box:focus-within {
+      border-color: rgba(124,58,237,0.6);
+      box-shadow: 0 0 0 4px rgba(124,58,237,0.1), 0 0 40px rgba(124,58,237,0.15);
+    }
+
+    .scanner-box svg {
+      color: var(--text-muted);
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+    }
+
+    .scanner-box input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text);
+      padding: 10px 0;
+    }
+
+    .scanner-box input::placeholder { color: var(--text-muted); }
+
+    .scan-btn {
+      background: linear-gradient(135deg, var(--accent), #5b21b6);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 28px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+      letter-spacing: 0.01em;
+    }
+
+    .scan-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(124,58,237,0.5);
+    }
+
+    .scan-btn:active { transform: translateY(0); }
+
+    .scanner-hint {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Back link ── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 18px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.2s;
+      background: var(--surface);
+      backdrop-filter: blur(8px);
+    }
+
+    .back-link:hover {
+      border-color: var(--border-bright);
+      color: var(--text);
+      background: var(--surface-hover);
+    }
+
+    /* ── Glass card ── */
+    .card {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .card-body { padding: 24px; }
+
+    /* ── History grid ── */
+    .history-section { margin-top: 64px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .history-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      transition: all 0.2s;
+      cursor: default;
+    }
+
+    .history-item:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+    }
+
+    .history-ts {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .history-ts::before {
+      content: '';
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .history-url {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .badge-danger { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+    .badge-warning { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+    .badge-safe { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+    .badge-neutral { background: rgba(107,114,128,0.15); color: #9ca3af; border: 1px solid rgba(107,114,128,0.25); }
+
+    .badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+    }
+
+    .badge-danger::before { background: #f87171; box-shadow: 0 0 6px #ef4444; }
+    .badge-warning::before { background: #fbbf24; box-shadow: 0 0 6px #f59e0b; }
+    .badge-safe::before { background: #34d399; box-shadow: 0 0 6px #10b981; }
+    .badge-neutral::before { background: #9ca3af; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty-state svg { opacity: 0.3; margin: 0 auto 16px; display: block; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── Loading ── */
+    .loading-card {
+      background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(6,182,212,0.05));
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 24px;
+      padding: 60px 40px;
+      text-align: center;
+    }
+
+    .spinner-ring {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 28px;
+      border-radius: 50%;
+      border: 3px solid rgba(124,58,237,0.2);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+      box-shadow: 0 0 20px rgba(124,58,237,0.3);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 12px;
+    }
+
+    .loading-status {
+      font-size: 14px;
+      color: #a78bfa;
+      font-weight: 500;
+      margin-bottom: 8px;
+      min-height: 20px;
+    }
+
+    .loading-hint {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ── Step progress ── */
+    .progress-steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 32px;
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(124,58,237,0.3);
+      animation: step-pulse 1.5s ease-in-out infinite;
+    }
+
+    .step-dot:nth-child(2) { animation-delay: 0.3s; }
+    .step-dot:nth-child(3) { animation-delay: 0.6s; }
+
+    @keyframes step-pulse {
+      0%, 100% { background: rgba(124,58,237,0.3); transform: scale(1); }
+      50% { background: var(--accent); transform: scale(1.4); }
+    }
+
+    /* ── Error card ── */
+    .error-card {
+      background: rgba(239,68,68,0.07);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 16px;
+      padding: 20px 24px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .error-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(239,68,68,0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .error-title { font-size: 14px; font-weight: 700; color: #f87171; margin-bottom: 4px; }
+    .error-body { font-size: 13px; color: #fca5a5; line-height: 1.6; }
+    .error-hint { font-size: 12px; color: rgba(252,165,165,0.7); margin-top: 6px; }
+
+    /* ── Verdict card ── */
+    .verdict-card {
+      border-radius: 24px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .verdict-card.danger {
+      background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04));
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+
+    .verdict-card.warning {
+      background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.04));
+      border: 1px solid rgba(245,158,11,0.25);
+    }
+
+    .verdict-card.safe {
+      background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));
+      border: 1px solid rgba(16,185,129,0.25);
+    }
+
+    .verdict-card.neutral {
+      background: linear-gradient(135deg, rgba(107,114,128,0.1), rgba(107,114,128,0.04));
+      border: 1px solid rgba(107,114,128,0.2);
+    }
+
+    .verdict-glow {
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      opacity: 0.15;
+      filter: blur(40px);
+    }
+
+    .verdict-card.danger .verdict-glow { background: var(--danger); }
+    .verdict-card.warning .verdict-glow { background: var(--warning); }
+    .verdict-card.safe .verdict-glow { background: var(--safe); }
+    .verdict-card.neutral .verdict-glow { background: #6b7280; }
+
+    .verdict-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .verdict-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .verdict-headline {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .verdict-score-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .verdict-score-label { font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.7; }
+
+    .verdict-card.danger .verdict-score-ring { background: rgba(239,68,68,0.15); border: 2px solid rgba(239,68,68,0.3); color: #f87171; }
+    .verdict-card.warning .verdict-score-ring { background: rgba(245,158,11,0.15); border: 2px solid rgba(245,158,11,0.3); color: #fbbf24; }
+    .verdict-card.safe .verdict-score-ring { background: rgba(16,185,129,0.15); border: 2px solid rgba(16,185,129,0.3); color: #34d399; }
+    .verdict-card.neutral .verdict-score-ring { background: rgba(107,114,128,0.15); border: 2px solid rgba(107,114,128,0.3); color: #9ca3af; }
+
+    .verdict-facts {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .verdict-fact {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .verdict-confidence {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Warning banners ── */
+    .warning-banner {
+      background: rgba(245,158,11,0.07);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #fbbf24;
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    /* ── URL accepted banner ── */
+    .url-banner {
+      background: rgba(124,58,237,0.07);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .url-banner-icon {
+      width: 32px; height: 32px;
+      background: rgba(124,58,237,0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .url-banner-label { font-size: 11px; font-weight: 600; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+    .url-banner-url { font-size: 13px; color: var(--text-dim); word-break: break-all; }
+
+    /* ── Evidence items ── */
+    .evidence-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .evidence-item {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .evidence-item:hover {
+      background: rgba(255,255,255,0.03);
+      border-color: var(--border-bright);
+    }
+
+    .evidence-item.riskier { border-left: 3px solid rgba(239,68,68,0.5); }
+    .evidence-item.safer { border-left: 3px solid rgba(16,185,129,0.5); }
+    .evidence-item.neutral { border-left: 3px solid rgba(107,114,128,0.3); }
+
+    .evidence-meta { flex: 1; }
+    .evidence-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    .evidence-finding { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+
+    /* ── Sidebar cards ── */
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .meta-row:last-child { border-bottom: none; }
+    .meta-key { color: var(--text-muted); font-weight: 500; }
+    .meta-val { color: var(--text); font-weight: 600; text-align: right; }
+
+    .state-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .state-pill.reachable { background: rgba(16,185,129,0.15); color: #34d399; }
+    .state-pill.timeout, .state-pill.unreachable { background: rgba(239,68,68,0.15); color: #f87171; }
+    .state-pill.setup_required { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .state-pill.unknown { background: rgba(107,114,128,0.15); color: #9ca3af; }
+
+    /* ── Screenshot ── */
+    .screenshot-wrap {
+      padding: 16px;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .screenshot-wrap img {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    /* ── Results layout ── */
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .results-main { display: flex; flex-direction: column; gap: 20px; }
+    .results-side { display: flex; flex-direction: column; gap: 20px; }
+
+    @media (max-width: 900px) {
+      .results-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 80px;
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      margin-top: 48px;
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat { text-align: center; }
+    .stat-num { font-size: 28px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #c4b5fd, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+
+    /* ── Scan another row ── */
+    .scan-another-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 640px) {
+      .stats-row { gap: 24px; }
+      .scan-another-row { flex-direction: column; align-items: flex-start; }
+      .hero h1 { letter-spacing: -1px; }
+      .scanner-box { flex-direction: column; padding: 16px; gap: 12px; }
+      .scan-btn { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- Nav -->
+  <nav>
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <span class="logo-name">ShieldScan</span>
+    </a>
+    <span class="nav-badge">Threat Intelligence</span>
+  </nav>
+
+  <!-- Hero / Scanner -->
+  {% if not loading and not status %}
+  <div class="hero">
+    <div class="hero-eyebrow">Live Phishing Detection</div>
+    <h1>Is this URL safe<br>to click?</h1>
+    <p>Paste any link and get an instant AI-powered phishing risk analysis with plain-language explanations.</p>
+
+    <div class="scanner-wrap">
+      <form action="/" method="post">
+        <div class="scanner-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
           <input
             type="text"
             name="url"
             id="url"
-            placeholder="https://example.com"
+            placeholder="Paste a URL to scan — e.g. https://example.com"
             value="{{ input_url }}"
             required
-            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            autocomplete="off"
+            spellcheck="false"
           >
-          <button
-            type="submit"
-            class="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 whitespace-nowrap"
-          >
-            Scan URL
-          </button>
+          <button type="submit" class="scan-btn">Scan Now</button>
         </div>
+        <p class="scanner-hint">Supports HTTP, HTTPS, and raw domains &middot; Results in seconds</p>
       </form>
-      {% else %}
-      <div class="mt-6">
-        <a href="/" class="rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 inline-flex items-center gap-2">
-          &larr; Scan Another URL
-        </a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-num">30+</div>
+        <div class="stat-label">Security Signals</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">ML</div>
+        <div class="stat-label">AI Powered</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">2</div>
+        <div class="stat-label">Detection Layers</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-section">
+    <div class="section-header">
+      <h2 class="section-title">Recent Scans</h2>
+    </div>
+    {% if history %}
+    <div class="history-grid">
+      {% for h in history[:9] %}
+      <div class="history-item">
+        <div class="history-ts">{{ h.timestamp }}</div>
+        <div class="history-url" title="{{ h.url }}">{{ h.url }}</div>
+        {% if h.level == 'High Risk' %}
+          <span class="badge badge-danger">{{ h.level }}</span>
+        {% elif h.level in ['Needs Caution', 'Content Risk'] %}
+          <span class="badge badge-warning">{{ h.level }}</span>
+        {% elif h.level == 'Likely Safe' %}
+          <span class="badge badge-safe">{{ h.level }}</span>
+        {% else %}
+          <span class="badge badge-neutral">{{ h.level or 'Unknown' }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+      <div class="empty-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <p>No scans yet. Paste a URL above to get started.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Scan bar when loading/result page -->
+  {% if loading or status %}
+  <div style="padding: 32px 0 0;">
+    <div class="scan-another-row">
+      <a href="/" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Scan Another URL
+      </a>
+      {% if not loading and status %}
+      <span style="font-size:13px;color:var(--text-muted);">Scanning: <span style="color:var(--text-dim);font-weight:500;">{{ input_url }}</span></span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Loading state -->
+  {% if loading %}
+  <div style="margin-top: 24px; max-width: 560px; margin-left: auto; margin-right: auto;">
+    <div class="loading-card">
+      <div class="spinner-ring"></div>
+      <div class="loading-title">Analyzing Threat Signals</div>
+      <div class="loading-status" id="loading-status">{{ current_status }}</div>
+      <div class="loading-hint">Checking 30+ security indicators across multiple layers…</div>
+      <div class="progress-steps">
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const jobId = "{{ job_id }}";
+    const statusEl = document.getElementById("loading-status");
+
+    const poll = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/scan/status/${jobId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.done) {
+            clearInterval(poll);
+            window.location.reload();
+          } else {
+            statusEl.textContent = data.status;
+          }
+        }
+      } catch (e) {}
+    }, 800);
+  </script>
+  {% endif %}
+
+  <!-- Error state -->
+  {% if not loading and status == 'error' %}
+  <div style="margin-top: 24px; max-width: 640px;">
+    <div class="error-card">
+      <div class="error-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div>
+        <div class="error-title">Invalid URL</div>
+        <div class="error-body">{{ message }}</div>
+        <div class="error-hint">Try a public website link like <strong>https://example.com</strong></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Results -->
+  {% if not loading and status == 'ok' %}
+
+  {% set level = friendly.level %}
+  {% set v_class = 'neutral' %}
+  {% if level == 'High Risk' %}{% set v_class = 'danger' %}
+  {% elif level in ['Needs Caution', 'Content Risk'] %}{% set v_class = 'warning' %}
+  {% elif level == 'Likely Safe' %}{% set v_class = 'safe' %}
+  {% endif %}
+
+  <div class="results-grid">
+
+    <!-- Main column -->
+    <div class="results-main">
+
+      <!-- URL accepted -->
+      <div class="url-banner">
+        <div class="url-banner-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+        </div>
+        <div>
+          <div class="url-banner-label">Scanned URL</div>
+          <div class="url-banner-url">{{ scan.validation.normalized_url }}</div>
+        </div>
+      </div>
+
+      <!-- Verdict card -->
+      <div class="verdict-card {{ v_class }}">
+        <div class="verdict-glow"></div>
+        <div class="verdict-top">
+          <div>
+            <div class="verdict-label">Risk Assessment</div>
+            <div class="verdict-headline">{{ friendly.headline }}</div>
+          </div>
+          <div class="verdict-score-ring">
+            {% if friendly.level == 'High Risk' %}⚠{% elif friendly.level == 'Likely Safe' %}✓{% elif friendly.level in ['Needs Caution', 'Content Risk'] %}!{% else %}—{% endif %}
+            <div class="verdict-score-label">{{ friendly.level or 'Unknown' }}</div>
+          </div>
+        </div>
+
+        {% if friendly.quick_facts %}
+        <div class="verdict-facts">
+          {% for fact in friendly.quick_facts %}
+          <div class="verdict-fact">{{ fact }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if friendly.confidence_text %}
+        <div class="verdict-confidence">{{ friendly.confidence_text }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Warnings -->
+      {% for w in (friendly.warnings or []) %}
+      {% if w %}
+      <div class="warning-banner">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        {{ w }}
       </div>
       {% endif %}
-    </section>
+      {% endfor %}
 
-    {% if not loading and not status %}
-    <!-- History on Homepage (Full Width) -->
-    <div class="mt-8">
-      <article class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
-          <h2 class="text-base font-semibold text-slate-800">Recent Scans</h2>
+      <!-- Evidence -->
+      {% if friendly.evidence_items %}
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Evidence & Signal Analysis</span>
+          <span class="badge badge-neutral">{{ friendly.evidence_items | length }} signals</span>
         </div>
-        <div class="p-6">
-          {% if history %}
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for h in history[:9] %}
-            <div class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50 p-4">
-              <span class="text-xs text-slate-500">{{ h.timestamp }}</span>
-              <span class="text-sm font-medium text-slate-800 truncate" title="{{ h.url }}">{{ h.url }}</span>
-              <div>
-                {% if h.level == 'High Risk' %}
-                <span class="rounded bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700 uppercase">{{ h.level }}</span>
-                {% elif h.level == 'Needs Caution' %}
-                <span class="rounded bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 uppercase">{{ h.level }}</span>
-                {% else %}
-                <span class="rounded bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 uppercase">{{ h.level }}</span>
-                {% endif %}
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-          {% else %}
-          <p class="text-sm text-slate-500">No scans yet. Submit a URL to see history here.</p>
-          {% endif %}
-        </div>
-      </article>
-    </div>
-    {% endif %}
-
-    {% if loading or status %}
-    <!-- Main Grid Layout for Results -->
-    <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-      
-      <!-- Left Column: Results / Loading -->
-      <div class="lg:col-span-2 space-y-6">
-        
-        {% if loading %}
-        <article class="rounded-xl border border-indigo-200 bg-indigo-50 p-8 text-center shadow-sm">
-          <div class="mx-auto inline-block h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-          <h2 class="mt-4 text-xl font-semibold text-indigo-900">Scanning in Progress</h2>
-          <p id="loading-status" class="mt-2 text-base text-indigo-700 font-medium">{{ current_status }}</p>
-          <p class="mt-2 text-sm text-indigo-500">Please wait, checking multiple security signals...</p>
-        </article>
-        
-        <script>
-          const jobId = "{{ job_id }}";
-          const statusEl = document.getElementById("loading-status");
-          
-          const poll = setInterval(async () => {
-            try {
-              const res = await fetch(`/api/scan/status/${jobId}`);
-              if (res.ok) {
-                const data = await res.json();
-                if (data.done) {
-                  clearInterval(poll);
-                  window.location.reload();
-                } else {
-                  statusEl.textContent = data.status;
-                }
-              }
-            } catch (e) {
-              console.error("Polling error", e);
-            }
-          }, 800);
-        </script>
-        {% endif %}
-
-        {% if not loading and status == 'error' %}
-        <article class="rounded-xl border border-rose-200 bg-rose-50 p-4">
-          <h2 class="text-sm font-semibold text-rose-700">Please Check the URL</h2>
-          <p class="mt-1 text-sm text-rose-700">{{ message }}</p>
-          <p class="mt-1 text-xs text-rose-600">Tip: enter a public website link like <span class="font-medium">https://example.com</span>.</p>
-        </article>
-        {% endif %}
-
-        {% if not loading and status == 'ok' %}
-        <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-          <h2 class="text-sm font-semibold text-emerald-700">Link Accepted</h2>
-          <p class="mt-1 text-sm text-emerald-700">{{ scan.validation.normalized_url }}</p>
-        </article>
-
-        <!-- Scan Decision -->
-        <article class="rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-lg font-semibold text-slate-900">Scan Decision</h2>
-            {% if friendly.level == 'High Risk' %}
-            <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">{{ friendly.level }}</span>
-            {% elif friendly.level == 'Needs Caution' %}
-            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">{{ friendly.level }}</span>
-            {% elif friendly.level == 'Likely Safe' %}
-            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">{{ friendly.level }}</span>
-            {% else %}
-            <span class="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">{{ friendly.level or 'Check Incomplete' }}</span>
-            {% endif %}
-          </div>
-          <p class="mt-3 text-base text-slate-800">{{ friendly.headline }}</p>
-          {% if friendly.quick_facts %}
-          <div class="mt-3 grid gap-2 sm:grid-cols-2">
-            {% for fact in friendly.quick_facts %}
-            <p class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">{{ fact }}</p>
-            {% endfor %}
-          </div>
-          {% endif %}
-          {% if friendly.confidence_text %}
-          <p class="mt-3 text-sm text-slate-600">{{ friendly.confidence_text }}</p>
-          {% endif %}
-        </article>
-
-
-
-        {% if friendly.evidence_items %}
-        <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 class="text-base font-semibold text-slate-900">Evidence and Facts</h2>
-          <div class="mt-3 space-y-3">
+        <div class="card-body">
+          <div class="evidence-list">
             {% for item in friendly.evidence_items %}
-            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <p class="text-sm font-semibold text-slate-800">{{ item.title }}</p>
-                {% if item.direction == 'riskier' %}
-                <span class="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700">Increases Risk</span>
-                {% elif item.direction == 'safer' %}
-                <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Safer Signal</span>
-                {% else %}
-                <span class="rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-semibold text-slate-700">Neutral Signal</span>
-                {% endif %}
+            <div class="evidence-item {{ item.direction }}">
+              <div class="evidence-meta">
+                <div class="evidence-title">{{ item.title }}</div>
+                <div class="evidence-finding">{{ item.finding }}</div>
               </div>
-              <p class="mt-2 text-sm text-slate-700"><span class="font-medium">What we found:</span> {{ item.finding }}</p>
+              {% if item.direction == 'riskier' %}
+                <span class="badge badge-danger" style="white-space:nowrap;flex-shrink:0;">Risk</span>
+              {% elif item.direction == 'safer' %}
+                <span class="badge badge-safe" style="white-space:nowrap;flex-shrink:0;">Safe</span>
+              {% else %}
+                <span class="badge badge-neutral" style="white-space:nowrap;flex-shrink:0;">Neutral</span>
+              {% endif %}
             </div>
             {% endfor %}
           </div>
-        </article>
-        {% endif %}
-
-        {% endif %} <!-- End of not loading and status == ok -->
+        </div>
       </div>
+      {% endif %}
 
-      <!-- Right Column: Sidebar (Screenshot, Widgets) -->
-      <div class="space-y-6">
-        
-        <!-- Screenshot Widget -->
-        {% if not loading and status == 'ok' and scan.reachability.screenshot_path %}
-        <article class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
-            <h2 class="text-sm font-semibold text-slate-800">Page Screenshot</h2>
-          </div>
-          <div class="p-4 bg-slate-100 flex justify-center">
-            <img src="{{ scan.reachability.screenshot_path }}" alt="Website Screenshot" class="rounded border border-slate-300 max-h-48 object-cover">
-          </div>
-        </article>
-        {% endif %}
-
-        <!-- Tech Details Widgets -->
-        {% if not loading and status == 'ok' %}
-        
-        <article class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
-            <h2 class="text-sm font-semibold text-slate-800">Domain & WHOIS</h2>
-          </div>
-          <div class="p-4 space-y-2 text-xs text-slate-700">
-            <p><span class="font-medium text-slate-900">URL:</span> <span class="break-all">{{ scan.validation.normalized_url }}</span></p>
-            <p><span class="font-medium text-slate-900">IP Resolved:</span> {{ 'Yes' if scan.features.domain_host.get('dns_resolved') else 'No' }}</p>
-            <p><span class="font-medium text-slate-900">WHOIS Available:</span> {{ 'Yes' if scan.features.domain_host.get('whois_available') else 'No' }}</p>
-          </div>
-        </article>
-
-        <article class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
-            <h2 class="text-sm font-semibold text-slate-800">Reachability</h2>
-          </div>
-          <div class="p-4 space-y-2 text-xs text-slate-700">
-            <p><span class="font-medium text-slate-900">State:</span> <span class="uppercase">{{ scan.reachability.state }}</span></p>
-            <p><span class="font-medium text-slate-900">Load Time:</span> {{ scan.reachability.load_time }}</p>
-            <p><span class="font-medium text-slate-900">Redirects:</span> {{ scan.reachability.redirect_hops }}</p>
-            <p class="truncate"><span class="font-medium text-slate-900">Final URL:</span> <a href="{{ scan.reachability.final_url }}" title="{{ scan.reachability.final_url }}" target="_blank" class="text-indigo-600 hover:underline">{{ scan.reachability.final_url }}</a></p>
-          </div>
-        </article>
-        {% endif %}
-
-      </div>
     </div>
-    {% endif %}
 
-  </main>
+    <!-- Sidebar -->
+    <div class="results-side">
+
+      {% if scan.reachability.screenshot_path %}
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Page Preview</span>
+        </div>
+        <div class="screenshot-wrap">
+          <img src="{{ scan.reachability.screenshot_path }}" alt="Page screenshot">
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Reachability -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Reachability</span>
+          {% set st = scan.reachability.state | lower %}
+          <span class="state-pill {{ st }}">{{ st }}</span>
+        </div>
+        <div class="card-body" style="padding: 16px 20px;">
+          {% if scan.reachability.load_time %}
+          <div class="meta-row">
+            <span class="meta-key">Load Time</span>
+            <span class="meta-val">{{ scan.reachability.load_time }}</span>
+          </div>
+          {% endif %}
+          <div class="meta-row">
+            <span class="meta-key">Redirects</span>
+            <span class="meta-val">{{ scan.reachability.redirect_hops }}</span>
+          </div>
+          {% if scan.reachability.final_url %}
+          <div class="meta-row">
+            <span class="meta-key">Final URL</span>
+            <span class="meta-val" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              <a href="{{ scan.reachability.final_url }}" target="_blank" style="color: #a78bfa; text-decoration: none;" title="{{ scan.reachability.final_url }}">
+                {{ scan.reachability.final_url | truncate(30, true, '…') if scan.reachability.final_url else '—' }}
+              </a>
+            </span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Domain & WHOIS -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Domain & WHOIS</span>
+        </div>
+        <div class="card-body" style="padding: 16px 20px;">
+          <div class="meta-row">
+            <span class="meta-key">DNS Resolved</span>
+            <span class="meta-val">
+              {% if scan.features.domain_host.get('dns_resolved') %}
+                <span style="color:#34d399;">Yes</span>
+              {% else %}
+                <span style="color:#f87171;">No</span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">WHOIS Data</span>
+            <span class="meta-val">
+              {% if scan.features.domain_host.get('whois_available') %}
+                <span style="color:#34d399;">Available</span>
+              {% else %}
+                <span style="color:#f87171;">Unavailable</span>
+              {% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content analysis badge if threats detected -->
+      {% if friendly.content_threats %}
+      <div class="card" style="border-color: rgba(245,158,11,0.3);">
+        <div class="card-header" style="border-color: rgba(245,158,11,0.2);">
+          <span class="card-title">Content Threats</span>
+          <span class="badge badge-warning">{{ friendly.content_threats | length }}</span>
+        </div>
+        <div class="card-body" style="padding: 16px 20px;">
+          {% for threat in friendly.content_threats %}
+          <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+            <div style="font-size:13px; font-weight:600; color: #fbbf24; margin-bottom: 4px;">{{ threat.label }}</div>
+            <div style="font-size:12px; color: var(--text-muted);">{{ threat.description }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+  {% endif %}
+
+  <footer>
+    ShieldScan &mdash; URL Threat Intelligence &middot; Built with ML + heuristic analysis
+  </footer>
+
+</div>
 </body>
 </html>
