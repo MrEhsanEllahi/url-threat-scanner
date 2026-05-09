@@ -7,4 +7,5 @@ __pycache__
 *.docx
 *.md
 .static
-staticscan_history.json
+static
+scan_history.json
