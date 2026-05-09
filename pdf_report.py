@@ -352,7 +352,12 @@ def build_pdf(scan: dict, friendly: dict, input_url: str) -> bytes:
     overview_rows = [
         ("Submitted URL", _safe(input_url)),
         ("Normalised URL", _safe(validation.get("normalized_url"))),
-        ("Reachability State", _safe(reachability.get("state", "")).upper()),
+        ("Reachability", {
+            "reachable": "Reachable",
+            "timeout": "Timed Out",
+            "unreachable": "Unreachable",
+            "setup_required": "Could Not Reach",
+        }.get(_safe(reachability.get("state", "")).lower(), _safe(reachability.get("state", "")).title())),
         ("Final URL After Redirects", _safe(reachability.get("final_url"))),
         ("Page Title", _safe(reachability.get("title"))),
         ("Load Time", _safe(reachability.get("load_time"))),

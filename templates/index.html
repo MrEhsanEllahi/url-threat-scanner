@@ -1122,6 +1122,9 @@
 
     .url-banner-label { font-size: 11px; font-weight: 600; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
     .url-banner-url { font-size: 13px; color: var(--text-dim); word-break: break-all; }
+    .url-banner-warn { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.25); }
+    .url-banner-icon-warn { background: rgba(245,158,11,0.15); }
+    .url-banner-label-warn { color: #fbbf24; }
 
     /* ── Evidence items ── */
     .evidence-list { display: flex; flex-direction: column; gap: 10px; }
@@ -1739,7 +1742,22 @@
     <!-- Main column -->
     <div class="results-main">
 
-      <!-- URL accepted -->
+      <!-- URL banner — state-aware -->
+      {% set reach_st = scan.reachability.state | lower %}
+      {% if reach_st in ['unreachable', 'timeout', 'setup_required'] %}
+      <div class="url-banner url-banner-warn">
+        <div class="url-banner-icon url-banner-icon-warn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <div class="url-banner-label url-banner-label-warn">URL Submitted — Site Unreachable</div>
+          <div class="url-banner-url">{{ scan.validation.normalized_url }}</div>
+        </div>
+      </div>
+      {% else %}
       <div class="url-banner">
         <div class="url-banner-icon">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1752,6 +1770,7 @@
           <div class="url-banner-url">{{ scan.validation.normalized_url }}</div>
         </div>
       </div>
+      {% endif %}
 
       <!-- Verdict card -->
       <div class="verdict-card {{ v_class }}">
@@ -1842,7 +1861,12 @@
         <div class="card-header">
           <span class="card-title">Reachability</span>
           {% set st = scan.reachability.state | lower %}
-          <span class="state-pill {{ st }}">{{ st }}</span>
+          {% if st == 'reachable' %}{% set st_label = 'Reachable' %}
+          {% elif st == 'timeout' %}{% set st_label = 'Timed Out' %}
+          {% elif st == 'unreachable' %}{% set st_label = 'Unreachable' %}
+          {% elif st == 'setup_required' %}{% set st_label = 'Could Not Reach' %}
+          {% else %}{% set st_label = st | title %}{% endif %}
+          <span class="state-pill {{ st }}">{{ st_label }}</span>
         </div>
         <div class="card-body" style="padding: 16px 20px;">
           {% if scan.reachability.load_time %}
