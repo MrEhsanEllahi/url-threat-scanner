@@ -209,6 +209,115 @@ def _friendly_scan_warning(error_text: str) -> str:
     return text
 
 
+def compute_scan_confidence(scan: dict) -> dict:
+    """Compute a 0-100 data-completeness score and per-layer breakdown."""
+    reachability = scan.get("reachability", {}) or {}
+    reach_state = str(reachability.get("state", "") or "").lower()
+    features = scan.get("features", {}) or {}
+    domain_host = features.get("domain_host", {}) or {}
+    extraction_status = str(features.get("status", "") or "").lower()
+    prediction = scan.get("prediction", {}) or {}
+    verdict = prediction.get("verdict", "Unavailable")
+    ml_conf = prediction.get("confidence")
+    content = scan.get("content_analysis", {}) or {}
+    content_verdict = content.get("content_verdict", "Not analyzed")
+    text_len = int(content.get("text_length_analyzed", 0) or 0)
+
+    score = 0
+    layers = []
+
+    # Layer 1 — URL structure (always available)
+    score += 20
+    layers.append({"name": "URL Structure", "status": "done",
+                   "desc": "30+ lexical features extracted from the URL string"})
+
+    # Layer 2 — Domain & WHOIS (15 pts)
+    whois_ok = bool(domain_host.get("whois_available"))
+    dns_ok = bool(domain_host.get("dns_resolved"))
+    if whois_ok:
+        score += 15
+        layers.append({"name": "Domain & WHOIS", "status": "done",
+                        "desc": "Domain age, registrar, and WHOIS metadata retrieved"})
+    elif dns_ok:
+        score += 7
+        layers.append({"name": "Domain & WHOIS", "status": "partial",
+                        "desc": "DNS resolved but WHOIS data was unavailable"})
+    else:
+        layers.append({"name": "Domain & WHOIS", "status": "failed",
+                        "desc": "DNS and WHOIS lookup failed"})
+
+    # Layer 3 — Site reachability (20 pts)
+    if reach_state == "reachable":
+        score += 20
+        layers.append({"name": "Site Reachability", "status": "done",
+                        "desc": "Site responded successfully during scan"})
+    elif reach_state in ("timeout",):
+        score += 5
+        layers.append({"name": "Site Reachability", "status": "partial",
+                        "desc": "Site timed out — partial data may be available"})
+    else:
+        layers.append({"name": "Site Reachability", "status": "failed",
+                        "desc": "Site was unreachable — content layers skipped"})
+
+    # Layer 4 — DOM analysis (20 pts)
+    if "full" in extraction_status:
+        score += 20
+        layers.append({"name": "DOM Analysis", "status": "done",
+                        "desc": "Full page structure, forms, and scripts analysed"})
+    elif "partial" in extraction_status:
+        score += 8
+        layers.append({"name": "DOM Analysis", "status": "partial",
+                        "desc": "Partial DOM extracted — some features missing"})
+    else:
+        layers.append({"name": "DOM Analysis", "status": "failed",
+                        "desc": "DOM not available — page could not be loaded"})
+
+    # Layer 5 — ML classifier (15 pts)
+    if verdict not in ("Unavailable", "", None):
+        ml_pts = 15
+        if isinstance(ml_conf, (int, float)):
+            ml_pts = max(5, int(15 * min(float(ml_conf) / 100.0, 1.0)))
+        score += ml_pts
+        layers.append({"name": "ML Classifier", "status": "done",
+                        "desc": f"Phishing model returned verdict: {verdict}"})
+    else:
+        layers.append({"name": "ML Classifier", "status": "failed",
+                        "desc": "Model unavailable — no trained classifier loaded"})
+
+    # Layer 6 — Content analysis (10 pts)
+    if content_verdict != "Not analyzed" and text_len > 50:
+        score += 10
+        layers.append({"name": "Content Analysis", "status": "done",
+                        "desc": f"Analysed {text_len:,} characters of page text"})
+    elif content_verdict != "Not analyzed":
+        score += 3
+        layers.append({"name": "Content Analysis", "status": "partial",
+                        "desc": "Content check ran but page text was minimal"})
+    else:
+        layers.append({"name": "Content Analysis", "status": "failed",
+                        "desc": "No page text available for content analysis"})
+
+    score = min(100, max(0, score))
+
+    if score >= 75:
+        tier, tier_color = "High", "green"
+        tier_desc = "All major scan layers completed — verdict is well-supported."
+    elif score >= 45:
+        tier, tier_color = "Medium", "amber"
+        tier_desc = "Partial scan — verdict is based on URL structure and domain data."
+    else:
+        tier, tier_color = "Low", "red"
+        tier_desc = "Limited data — only surface-level features were available."
+
+    return {
+        "score": score,
+        "tier": tier,
+        "tier_color": tier_color,
+        "tier_desc": tier_desc,
+        "layers": layers,
+    }
+
+
 def build_user_friendly_summary(scan: dict) -> dict:
     prediction = scan.get("prediction", {}) or {}
     verdict = prediction.get("verdict", "Unavailable")
@@ -377,6 +486,7 @@ def build_user_friendly_summary(scan: dict) -> dict:
         "content_verdict": content_verdict,
         "content_severity": content_severity,
         "content_threats": content_threats,
+        "confidence_meter": compute_scan_confidence(scan),
     }
 
 

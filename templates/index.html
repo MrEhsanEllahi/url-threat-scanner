@@ -1168,6 +1168,65 @@
     .meta-key { color: var(--text-muted); font-weight: 500; }
     .meta-val { color: var(--text); font-weight: 600; text-align: right; }
 
+    /* ── Scan confidence meter ── */
+    .conf-meter-card { }
+
+    .conf-bar-track {
+      height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 14px 0 6px;
+      position: relative;
+    }
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 1s cubic-bezier(0.16,1,0.3,1);
+    }
+    .conf-bar-fill.green  { background: linear-gradient(90deg, #059669, #34d399); box-shadow: 0 0 10px rgba(52,211,153,0.4); }
+    .conf-bar-fill.amber  { background: linear-gradient(90deg, #d97706, #fbbf24); box-shadow: 0 0 10px rgba(251,191,36,0.4); }
+    .conf-bar-fill.red    { background: linear-gradient(90deg, #b91c1c, #f87171); box-shadow: 0 0 10px rgba(248,113,113,0.3); }
+
+    .conf-score-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .conf-score-num { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+    .conf-score-num.green  { color: #34d399; }
+    .conf-score-num.amber  { color: #fbbf24; }
+    .conf-score-num.red    { color: #f87171; }
+    .conf-tier-badge {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+      padding: 3px 9px; border-radius: 99px;
+    }
+    .conf-tier-badge.green { background: rgba(52,211,153,0.12); color: #34d399; }
+    .conf-tier-badge.amber { background: rgba(251,191,36,0.12); color: #fbbf24; }
+    .conf-tier-badge.red   { background: rgba(248,113,113,0.12); color: #f87171; }
+
+    .conf-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+    .conf-layers { display: flex; flex-direction: column; gap: 7px; }
+    .conf-layer {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px;
+    }
+    .conf-layer-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .conf-layer-dot.done    { background: #34d399; box-shadow: 0 0 5px rgba(52,211,153,0.5); }
+    .conf-layer-dot.partial { background: #fbbf24; box-shadow: 0 0 5px rgba(251,191,36,0.5); }
+    .conf-layer-dot.failed  { background: rgba(255,255,255,0.15); }
+
+    .conf-layer-name { color: var(--text-dim); font-weight: 600; flex-shrink: 0; width: 110px; }
+    .conf-layer-desc { color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conf-layer-check { flex-shrink: 0; font-size: 11px; }
+    .conf-layer-check.done    { color: #34d399; }
+    .conf-layer-check.partial { color: #fbbf24; }
+    .conf-layer-check.failed  { color: rgba(255,255,255,0.2); }
+
     .state-pill {
       display: inline-block;
       padding: 3px 10px;
@@ -1918,6 +1977,61 @@
           <img src="{{ scan.reachability.screenshot_path }}" alt="Page screenshot">
         </div>
       </div>
+      {% endif %}
+
+      <!-- Scan Confidence Meter -->
+      {% if friendly.confidence_meter %}
+      {% set cm = friendly.confidence_meter %}
+      <div class="card conf-meter-card" id="conf-card">
+        <div class="card-header">
+          <span class="card-title">Scan Confidence</span>
+          <span class="conf-tier-badge {{ cm.tier_color }}">{{ cm.tier }}</span>
+        </div>
+        <div class="card-body" style="padding:16px 20px;">
+          <div class="conf-score-row">
+            <span class="conf-score-num {{ cm.tier_color }}" id="conf-score-num">0</span>
+            <span style="font-size:12px;color:var(--text-muted);margin-left:4px;">/ 100</span>
+          </div>
+          <div class="conf-bar-track">
+            <div class="conf-bar-fill {{ cm.tier_color }}" id="conf-bar-fill" style="width:0%"></div>
+          </div>
+          <div class="conf-desc">{{ cm.tier_desc }}</div>
+          <div class="conf-layers">
+            {% for layer in cm.layers %}
+            <div class="conf-layer">
+              <div class="conf-layer-dot {{ layer.status }}"></div>
+              <div class="conf-layer-name">{{ layer.name }}</div>
+              <div class="conf-layer-desc" title="{{ layer.desc }}">{{ layer.desc }}</div>
+              <div class="conf-layer-check {{ layer.status }}">
+                {% if layer.status == 'done' %}✓{% elif layer.status == 'partial' %}~{% else %}✗{% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <script>
+        (function() {
+          const target = {{ cm.score }};
+          const fill = document.getElementById("conf-bar-fill");
+          const num = document.getElementById("conf-score-num");
+          if (!fill || !num) return;
+          let start = null;
+          const dur = 1000;
+          function step(ts) {
+            if (!start) start = ts;
+            const p = Math.min((ts - start) / dur, 1);
+            const ease = 1 - Math.pow(1 - p, 3);
+            const cur = Math.round(ease * target);
+            num.textContent = cur;
+            fill.style.width = (ease * target) + "%";
+            if (p < 1) requestAnimationFrame(step);
+            else { num.textContent = target; fill.style.width = target + "%"; }
+          }
+          // Delay slightly so it's visible
+          setTimeout(() => requestAnimationFrame(step), 200);
+        })();
+      </script>
       {% endif %}
 
       <!-- Reachability -->
