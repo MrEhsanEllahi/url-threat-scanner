@@ -10,6 +10,7 @@ import math
 import pickle
 import re
 import socket
+import urllib.request
 from urllib.parse import parse_qsl, urljoin, urlparse
 
 
@@ -385,6 +386,48 @@ def empty_scan_response() -> dict[str, Any]:
         "top_signals": prediction["top_signals"],
         "errors": [],
     }
+
+
+def quick_reachability_precheck(url: str, timeout: int = 4) -> dict:
+    """Lightweight DNS + HTTP HEAD pre-check run before the full scan.
+    Returns {"reachable": bool, "reason": str} within ~timeout seconds."""
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or ""
+        if not host:
+            return {"reachable": False, "reason": "Could not parse hostname from URL."}
+
+        # Step 1: DNS resolution
+        try:
+            socket.setdefaulttimeout(timeout)
+            socket.getaddrinfo(host, None)
+        except socket.gaierror:
+            return {"reachable": False, "reason": f"DNS lookup failed — no record found for '{host}'."}
+        except OSError:
+            return {"reachable": False, "reason": f"Network error during DNS lookup for '{host}'."}
+
+        # Step 2: HTTP HEAD request
+        try:
+            req = urllib.request.Request(url, method="HEAD")
+            req.add_header("User-Agent", "Mozilla/5.0 (compatible; ShieldScan/1.0)")
+            ctx = urllib.request.urlopen(req, timeout=timeout)
+            ctx.close()
+            return {"reachable": True, "reason": "Site responded to HEAD request."}
+        except urllib.error.HTTPError as e:
+            # Server replied (even errors like 403, 405 mean it's up)
+            if e.code in (400, 401, 403, 405, 406, 429, 503):
+                return {"reachable": True, "reason": f"Server responded with HTTP {e.code}."}
+            return {"reachable": False, "reason": f"HTTP error {e.code} — site may be down or blocking."}
+        except urllib.error.URLError as e:
+            reason = str(e.reason) if hasattr(e, "reason") else str(e)
+            if "timed out" in reason.lower():
+                return {"reachable": False, "reason": "Connection timed out — site is unresponsive."}
+            return {"reachable": False, "reason": f"Connection failed: {reason}."}
+        except Exception as e:
+            return {"reachable": False, "reason": f"HEAD request failed: {e}."}
+
+    except Exception as e:
+        return {"reachable": False, "reason": f"Pre-check error: {e}."}
 
 
 def is_valid_public_hostname(host: str) -> bool:

@@ -8,7 +8,7 @@ from datetime import datetime
 
 from flask import Flask, jsonify, redirect, render_template, request, url_for, make_response
 
-from scan_engine import empty_scan_response, normalize_and_validate_url, run_canonical_scan
+from scan_engine import empty_scan_response, normalize_and_validate_url, run_canonical_scan, quick_reachability_precheck
 from pdf_report import build_pdf
 
 app = Flask(__name__)
@@ -398,12 +398,19 @@ def index():
                 if jid in job_store:
                     job_store[jid]["status"] = msg
             try:
+                # Fast pre-check: DNS + HEAD before the full scan starts
+                if jid in job_store:
+                    job_store[jid]["status"] = "Checking if site is reachable..."
+                precheck = quick_reachability_precheck(url, timeout=4)
+                if jid in job_store:
+                    job_store[jid]["precheck"] = precheck
+
                 scan = run_canonical_scan(url, status_callback=cb, job_id=jid)
                 friendly = build_user_friendly_summary(scan)
                 if jid in job_store:
                     job_store[jid]["scan"] = scan
                     job_store[jid]["friendly"] = friendly
-                    
+
                     if scan.get("validation", {}).get("ok"):
                         add_to_history(url, friendly.get("level"), scan.get("prediction", {}).get("verdict", "Unknown"))
             except Exception as e:
@@ -475,7 +482,8 @@ def api_scan_status(job_id):
         return jsonify({"error": "not found"}), 404
     return jsonify({
         "status": job["status"],
-        "done": job["done"]
+        "done": job["done"],
+        "precheck": job.get("precheck")
     })
 
 @app.route("/api/scan", methods=["POST"])
