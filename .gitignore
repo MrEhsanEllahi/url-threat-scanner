@@ -6,6 +6,5 @@ __pycache__
 .env
 *.docx
 *.md
-.static
-static
+static/cache/
 scan_history.json

@@ -4,7 +4,9 @@ import json
 import os
 import threading
 import uuid
+import time
 from datetime import datetime
+from pathlib import Path
 
 from flask import Flask, jsonify, redirect, render_template, request, url_for, make_response
 
@@ -13,6 +15,32 @@ from pdf_report import build_pdf
 
 app = Flask(__name__)
 job_store = {}
+
+CACHE_DIR = "static/cache"
+
+def cleanup_cache_task():
+    """Background task to delete old screenshots from static/cache."""
+    cache_path = Path(CACHE_DIR)
+    # Ensure cache directory exists
+    cache_path.mkdir(parents=True, exist_ok=True)
+
+    while True:
+        try:
+            now = time.time()
+            # Delete files older than 1 hour (3600 seconds)
+            for f in cache_path.glob("*.png"):
+                if f.is_file():
+                    if now - f.stat().st_mtime > 3600:
+                        try:
+                            f.unlink()
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+        time.sleep(600)  # Run every 10 minutes
+
+# Start the cleanup thread
+threading.Thread(target=cleanup_cache_task, daemon=True).start()
 
 HISTORY_FILE = "scan_history.json"
 
@@ -490,6 +518,11 @@ def build_user_friendly_summary(scan: dict) -> dict:
     }
 
 
+@app.route("/favicon.ico")
+def favicon():
+    # Minimal 1x1 transparent GIF or a small ShieldScan-colored dot
+    return "", 204
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -553,7 +586,7 @@ def result_page(job_id):
         
     if not job["done"]:
         return render_template(
-            "index.html",
+            "report.html",
             input_url=job["input_url"],
             status="",
             message="",
@@ -574,7 +607,7 @@ def result_page(job_id):
     )
 
     return render_template(
-        "index.html",
+        "report.html",
         input_url=job["input_url"],
         status=status_str,
         message=message,

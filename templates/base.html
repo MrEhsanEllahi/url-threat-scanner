@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:,">
+  <title>{% block title %}ShieldScan — URL Threat Intelligence{% endblock %}</title>
+  
+  <!-- Bootstrap 5 CSS (Local) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Custom Style -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="navbar navbar-expand-lg border-bottom sticky-top bg-dark bg-opacity-75 backdrop-blur">
+    <div class="container py-2">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <div class="logo-icon bg-gradient-purple p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <span class="logo-name fw-bold fs-5">ShieldScan</span>
+      </a>
+
+      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        {% block nav_content %}
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-3">
+          <li class="nav-item">
+            <a class="nav-link px-3" href="/#about">About</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-3" href="/#why">Why It Matters</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-3" href="/#how-it-works">How It Works</a>
+          </li>
+        </ul>
+        <div class="d-flex align-items-center gap-3">
+          <a href="/#scanner" class="btn btn-outline-primary rounded-pill px-4 fw-bold">Scan a URL</a>
+        </div>
+        {% endblock %}
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="container py-5 mt-5 border-top text-muted small">
+    <div class="row align-items-center gy-4">
+      <div class="col-md-4 d-flex align-items-center gap-2">
+        <div class="logo-icon p-1 rounded-2 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; background: rgba(124,58,237,0.2);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <span class="fw-bold">ShieldScan</span>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex justify-content-md-center gap-4">
+          <a href="/#about" class="text-decoration-none text-muted">About</a>
+          <a href="/#why" class="text-decoration-none text-muted">Why It Matters</a>
+          <a href="/#how-it-works" class="text-decoration-none text-muted">How It Works</a>
+        </div>
+      </div>
+      <div class="col-md-4 text-md-end">
+        <span>URL Threat Intelligence &middot; ML + heuristic analysis</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5 JS Bundle (Local) -->
+  <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+  <script>
+    // ── Smooth scroll for anchor links ──
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener('click', e => {
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // ── Scroll-reveal with IntersectionObserver ──
+    const revealEls = document.querySelectorAll('.reveal');
+    if (revealEls.length) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+      revealEls.forEach(el => observer.observe(el));
+    }
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

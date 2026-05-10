@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}ShieldScan — Scan Report for {{ input_url }}{% endblock %}
+
+{% block content %}
+  <!-- Toolbar -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 mt-2">
+    <a href="/" class="btn btn-sm btn-outline-secondary rounded-3 d-flex align-items-center gap-2">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Scan Another URL
+    </a>
+    <div class="d-flex align-items-center gap-3">
+      {% if not loading and status == 'ok' and friendly.level in ['High Risk','Needs Caution','Likely Safe','Content Risk'] %}
+      <a href="/pdf/{{ job_id }}" class="btn btn-sm btn-primary rounded-3 d-flex align-items-center gap-2 px-3 fw-bold" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Export PDF Report
+      </a>
+      {% endif %}
+      {% if not loading and status %}
+      <span class="small text-muted">Target: <span class="text-light fw-medium">{{ input_url | truncate(50) }}</span></span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  {% if loading %}
+  <div class="row justify-content-center py-5">
+    <div class="col-md-6 col-lg-5">
+      <div class="card p-4 p-md-5 text-center shadow-lg border-primary border-opacity-10 bg-gradient-purple bg-opacity-5">
+        <div class="spinner-border text-primary mb-4" style="width: 3rem; height: 3rem; border-width: 0.25rem;" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <h3 class="fw-bold mb-3">Analyzing Threat Signals</h3>
+        <p class="text-primary fw-medium mb-2 small" id="loading-status">{{ current_status }}</p>
+        <p class="text-secondary small mb-4" id="loading-hint">Checking 30+ security indicators across multiple layers…</p>
+        
+        <div class="d-flex justify-content-center gap-2 mb-2">
+          <div class="spinner-grow spinner-grow-sm text-primary opacity-25" role="status"></div>
+          <div class="spinner-grow spinner-grow-sm text-primary opacity-50" role="status"></div>
+          <div class="spinner-grow spinner-grow-sm text-primary" role="status"></div>
+        </div>
+      </div>
+      <div id="precheck-container" class="mt-4"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Error state -->
+  {% if not loading and status == 'error' %}
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="alert alert-danger border-danger border-opacity-25 bg-danger bg-opacity-10 p-4 rounded-4 d-flex gap-3">
+        <div class="flex-shrink-0">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div>
+          <h5 class="alert-heading fw-bold mb-1">Invalid URL or Connection Error</h5>
+          <p class="mb-2 opacity-75">{{ message }}</p>
+          <hr class="border-danger border-opacity-25">
+          <p class="mb-0 small opacity-75">Try a public website link like <strong>https://example.com</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Results -->
+  {% if not loading and status == 'ok' %}
+
+  {% set level = friendly.level %}
+  {% set v_class = 'neutral' %}
+  {% if level == 'High Risk' %}{% set v_class = 'danger' %}
+  {% elif level in ['Needs Caution', 'Content Risk'] %}{% set v_class = 'warning' %}
+  {% elif level == 'Likely Safe' %}{% set v_class = 'safe' %}
+  {% endif %}
+
+  <div class="row g-4">
+
+    <!-- Main column -->
+    <div class="col-lg-8">
+      <div class="d-flex flex-column gap-4">
+
+        <!-- URL Header — state-aware -->
+        {% set reach_st = scan.reachability.state | lower %}
+        <div class="card p-3 border-0 bg-white bg-opacity-5">
+          <div class="d-flex align-items-center gap-3">
+            <div class="flex-shrink-0 p-2 rounded-3 {{ 'bg-warning text-warning' if reach_st in ['unreachable', 'timeout', 'setup_required'] else 'bg-primary text-primary' }} bg-opacity-10" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+              {% if reach_st in ['unreachable', 'timeout', 'setup_required'] %}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              {% else %}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+              {% endif %}
+            </div>
+            <div class="overflow-hidden">
+              <div class="small text-muted text-uppercase ls-wide fw-bold mb-1" style="font-size: 0.65rem;">
+                {{ 'URL Submitted — Site Unreachable' if reach_st in ['unreachable', 'timeout', 'setup_required'] else 'Scanned URL' }}
+              </div>
+              <div class="text-light fw-medium text-truncate">{{ scan.validation.normalized_url }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verdict card -->
+        <div class="card verdict-card {{ v_class }} p-4 p-md-5 border-2 shadow">
+          <div class="verdict-glow"></div>
+          <div class="row align-items-center gy-4 position-relative z-1">
+            <div class="col-md">
+              <div class="small text-muted text-uppercase ls-wide fw-bold mb-2">Risk Assessment</div>
+              <h2 class="display-6 fw-bold mb-0">{{ friendly.headline }}</h2>
+            </div>
+            <div class="col-md-auto">
+              <div class="d-flex flex-column align-items-center justify-content-center rounded-circle border border-2 border-opacity-25" style="width: 100px; height: 100px; background: rgba(255,255,255,0.05);">
+                <div class="h3 fw-bold mb-0">
+                  {% if friendly.level == 'High Risk' %}⚠{% elif friendly.level == 'Likely Safe' %}✓{% elif friendly.level in ['Needs Caution', 'Content Risk'] %}!{% else %}—{% endif %}
+                </div>
+                <div class="small fw-bold text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.05em;">{{ friendly.level or 'Unknown' }}</div>
+              </div>
+            </div>
+          </div>
+
+          {% if friendly.quick_facts %}
+          <div class="row g-2 mt-4 position-relative z-1">
+            {% for fact in friendly.quick_facts %}
+            <div class="col-sm-6 col-md-4">
+              <div class="p-2 px-3 rounded-3 bg-black bg-opacity-20 border border-white border-opacity-5 small text-secondary">
+                {{ fact }}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if friendly.confidence_text %}
+          <div class="mt-4 pt-4 border-top border-white border-opacity-10 small text-secondary position-relative z-1">
+            {{ friendly.confidence_text }}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Warnings -->
+        {% for w in (friendly.warnings or []) %}
+        {% if w %}
+        <div class="alert alert-warning border-warning border-opacity-25 bg-warning bg-opacity-5 d-flex gap-3 rounded-4">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-1">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <div class="small">{{ w }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        <!-- Scan Confidence Meter -->
+        {% if friendly.confidence_meter %}
+        {% set cm = friendly.confidence_meter %}
+        <div class="card border-0 bg-white bg-opacity-5 shadow-sm overflow-visible">
+          <div class="card-header border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center px-4 py-3">
+            <h6 class="card-title-sm mb-0">Scan Confidence</h6>
+            <span class="badge rounded-pill bg-{{ cm.tier_color }} bg-opacity-10 text-{{ cm.tier_color }} border border-{{ cm.tier_color }} border-opacity-25 px-3 py-1">{{ cm.tier }}</span>
+          </div>
+          <div class="card-body p-4">
+            <div class="d-flex align-items-baseline gap-2 mb-2">
+              <span class="h2 fw-bold mb-0 text-{{ cm.tier_color }}" id="conf-score-num">0</span>
+              <span class="text-muted small fw-medium">/ 100</span>
+            </div>
+            <div class="conf-bar-track mb-3">
+              <div class="conf-bar-fill {{ cm.tier_color }}" id="conf-bar-fill" style="width:0%"></div>
+            </div>
+            <p class="small text-secondary mb-4">{{ cm.tier_desc }}</p>
+            
+            <div class="list-group list-group-flush bg-transparent">
+              {% for layer in cm.layers %}
+              <div class="list-group-item bg-transparent border-white border-opacity-5 px-0 py-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle {{ 'bg-success' if layer.status == 'done' else ('bg-warning' if layer.status == 'partial' else 'bg-secondary opacity-25') }}" style="width: 8px; height: 8px; box-shadow: 0 0 8px currentColor;"></div>
+                <div class="flex-grow-1 min-width-0">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small fw-bold text-light">{{ layer.name }}</span>
+                    <span class="small {{ 'text-success' if layer.status == 'done' else ('text-warning' if layer.status == 'partial' else 'text-muted opacity-50') }}">
+                      {% if layer.status == 'done' %}✓{% elif layer.status == 'partial' %}~{% else %}✗{% endif %}
+                    </span>
+                  </div>
+                  <div class="small text-muted text-truncate" title="{{ layer.desc }}">{{ layer.desc }}</div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Evidence -->
+        {% if friendly.evidence_items %}
+        <div class="card border-0 bg-white bg-opacity-5 shadow-sm">
+          <div class="card-header border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center px-4 py-3">
+            <h6 class="card-title-sm mb-0">Evidence & Signal Analysis</h6>
+            <span class="badge badge-outline rounded-pill px-3 py-1 fw-medium" style="font-size: 0.7rem;">{{ friendly.evidence_items | length }} signals</span>
+          </div>
+          <div class="card-body p-4">
+            <div class="d-flex flex-column gap-3">
+              {% for item in friendly.evidence_items %}
+              <div class="p-3 rounded-4 bg-black bg-opacity-20 border border-white border-opacity-5 d-flex align-items-start gap-3 hover-lift border-start border-4 border-{{ 'danger' if item.direction == 'riskier' else ('success' if item.direction == 'safer' else 'secondary') }}">
+                <div class="flex-grow-1 overflow-hidden">
+                  <div class="fw-bold text-light mb-1 small">{{ item.title }}</div>
+                  <div class="small text-secondary mb-0 opacity-75" style="line-height: 1.5;">{{ item.finding }}</div>
+                </div>
+                <div class="flex-shrink-0">
+                  {% if item.direction == 'riskier' %}
+                    <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1" style="font-size: 0.65rem;">Risk</span>
+                  {% elif item.direction == 'safer' %}
+                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1" style="font-size: 0.65rem;">Safe</span>
+                  {% else %}
+                    <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1" style="font-size: 0.65rem;">Neutral</span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="d-flex flex-column gap-4 sticky-lg-top" style="top: 100px;">
+
+        {% if scan.reachability.screenshot_path %}
+        <div class="card border-0 bg-white bg-opacity-5 overflow-hidden shadow-sm">
+          <div class="card-header border-bottom border-white border-opacity-10 px-4 py-3">
+            <h6 class="card-title-sm mb-0">Page Preview</h6>
+          </div>
+          <div class="p-3 bg-black bg-opacity-25">
+            <img src="{{ scan.reachability.screenshot_path }}" class="img-fluid rounded-3 border border-white border-opacity-10" alt="Page screenshot">
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Reachability -->
+        <div class="card border-0 bg-white bg-opacity-5 shadow-sm">
+          <div class="card-header border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center px-4 py-3">
+            <h6 class="card-title-sm mb-0">Reachability</h6>
+            {% set st = scan.reachability.state | lower %}
+            {% if st == 'reachable' %}{% set st_theme = 'success' %}{% set st_label = 'Reachable' %}
+            {% elif st == 'timeout' %}{% set st_theme = 'warning' %}{% set st_label = 'Timed Out' %}
+            {% elif st == 'unreachable' %}{% set st_theme = 'danger' %}{% set st_label = 'Unreachable' %}
+            {% elif st == 'setup_required' %}{% set st_theme = 'warning' %}{% set st_label = 'Limited' %}
+            {% else %}{% set st_theme = 'secondary' %}{% set st_label = st | title %}{% endif %}
+            <span class="badge rounded-pill bg-{{ st_theme }} bg-opacity-10 text-{{ st_theme }} border border-{{ st_theme }} border-opacity-25 px-2 py-1" style="font-size: 0.65rem;">{{ st_label }}</span>
+          </div>
+          <div class="card-body p-4">
+            {% if scan.reachability.load_time %}
+            <div class="d-flex justify-content-between py-2 border-bottom border-white border-opacity-5">
+              <span class="small text-muted fw-medium">Load Time</span>
+              <span class="small text-light fw-bold">{{ scan.reachability.load_time }}</span>
+            </div>
+            {% endif %}
+            <div class="d-flex justify-content-between py-2 border-bottom border-white border-opacity-5">
+              <span class="small text-muted fw-medium">Redirects</span>
+              <span class="small text-light fw-bold">{{ scan.reachability.redirect_hops }}</span>
+            </div>
+            {% if scan.reachability.final_url %}
+            <div class="py-2">
+              <div class="small text-muted fw-medium mb-1">Final URL</div>
+              <div class="small text-truncate">
+                <a href="{{ scan.reachability.final_url }}" target="_blank" class="text-primary text-decoration-none fw-medium" title="{{ scan.reachability.final_url }}">
+                  {{ scan.reachability.final_url }}
+                </a>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Domain & WHOIS -->
+        <div class="card border-0 bg-white bg-opacity-5 shadow-sm">
+          <div class="card-header border-bottom border-white border-opacity-10 px-4 py-3">
+            <h6 class="card-title-sm mb-0">Domain & WHOIS</h6>
+          </div>
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between py-2 border-bottom border-white border-opacity-5">
+              <span class="small text-muted fw-medium">DNS Resolved</span>
+              <span class="small fw-bold {{ 'text-success' if scan.features.domain_host.get('dns_resolved') else 'text-danger' }}">
+                {{ 'Yes' if scan.features.domain_host.get('dns_resolved') else 'No' }}
+              </span>
+            </div>
+            <div class="d-flex justify-content-between py-2">
+              <span class="small text-muted fw-medium">WHOIS Data</span>
+              <span class="small fw-bold {{ 'text-success' if scan.features.domain_host.get('whois_available') else 'text-danger' }}">
+                {{ 'Available' if scan.features.domain_host.get('whois_available') else 'Unavailable' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content analysis badge if threats detected -->
+        {% if friendly.content_threats %}
+        <div class="card border-warning border-opacity-25 bg-warning bg-opacity-5 shadow-sm">
+          <div class="card-header border-bottom border-warning border-opacity-10 d-flex justify-content-between align-items-center px-4 py-3">
+            <h6 class="card-title-sm mb-0 text-warning">Content Threats</h6>
+            <span class="badge rounded-pill bg-warning px-2" style="color:#212529;font-weight:600;">{{ friendly.content_threats | length }}</span>
+          </div>
+          <div class="card-body p-4">
+            <div class="d-flex flex-column gap-3">
+              {% for threat in friendly.content_threats %}
+              <div class="{{ 'mb-0' if loop.last else 'pb-3 border-bottom border-warning border-opacity-10' }}">
+                <div class="small fw-bold text-warning mb-1">{{ threat.label }}</div>
+                <div class="small text-secondary opacity-75" style="line-height: 1.5;">{{ threat.description }}</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+  {% if loading %}
+  <script>
+    (function() {
+      const jobId = "{{ job_id }}";
+      const statusEl = document.getElementById("loading-status");
+      const loadingHint = document.getElementById("loading-hint");
+      const precheckContainer = document.getElementById("precheck-container");
+      let precheckShown = false;
+
+      function showPrecheckWarning(reason) {
+        if (precheckShown || !precheckContainer) return;
+        precheckShown = true;
+
+        precheckContainer.innerHTML = `
+          <div class="alert alert-warning border-warning border-opacity-25 bg-warning bg-opacity-5 p-4 rounded-4 d-flex gap-3 shadow-sm reveal visible">
+            <div class="flex-shrink-0">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-warning">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div>
+              <div class="small text-warning fw-bold text-uppercase ls-wide mb-1" style="font-size: 0.65rem;">Early Warning — Site May Be Unreachable</div>
+              <div class="small text-light fw-medium mb-1">${reason}</div>
+              <div class="small text-muted" style="font-size: 0.75rem;">The full scan will still complete — results may be limited to URL structure analysis only.</div>
+            </div>
+          </div>`;
+
+        if (loadingHint) {
+          loadingHint.textContent = "Continuing analysis using URL structure and domain data…";
+        }
+      }
+
+      const poll = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/scan/status/${jobId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.precheck && data.precheck.reachable === false && !precheckShown) {
+              showPrecheckWarning(data.precheck.reason);
+            }
+            if (data.done) {
+              clearInterval(poll);
+              window.location.reload();
+            } else {
+              statusEl.textContent = data.status;
+            }
+          }
+        } catch (e) {}
+      }, 800);
+    })();
+  </script>
+  {% endif %}
+
+  {% if not loading and status == 'ok' and friendly.confidence_meter %}
+  <script>
+    (function() {
+      const target = {{ friendly.confidence_meter.score }};
+      const fill = document.getElementById("conf-bar-fill");
+      const num = document.getElementById("conf-score-num");
+      if (!fill || !num) return;
+      let start = null;
+      const dur = 1000;
+      function step(ts) {
+        if (!start) start = ts;
+        const p = Math.min((ts - start) / dur, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        const cur = Math.round(ease * target);
+        num.textContent = cur;
+        fill.style.width = (ease * target) + "%";
+        if (p < 1) requestAnimationFrame(step);
+        else { num.textContent = target; fill.style.width = target + "%"; }
+      }
+      setTimeout(() => requestAnimationFrame(step), 200);
+    })();
+  </script>
+  {% endif %}
+{% endblock %}

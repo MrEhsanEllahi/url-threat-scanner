@@ -1,0 +1,42 @@
+{
+  "project_name": "ShieldScan",
+  "version": "1.2.0",
+  "purpose": "AI-powered URL threat intelligence and phishing detection platform.",
+  "architecture": {
+    "backend": "Python (Flask)",
+    "frontend": "Bootstrap 5.3, Jinja2, Vanilla JS",
+    "analysis_engine": "Selenium (Headless), Scikit-Learn (Random Forest), WHOIS/DNS queries",
+    "storage": "JSON-based history, Local filesystem cache for screenshots"
+  },
+  "key_features": [
+    "Dual-layer detection: ML classifier + Heuristic content analysis",
+    "Real-time URL, DOM, and Lexical feature extraction",
+    "Headless browser simulation with automated screenshots",
+    "Detailed risk assessment reports with plain-language explanations",
+    "PDF report export for security analysis",
+    "Offline-ready assets (local Bootstrap/Fonts)",
+    "Automated background cache management"
+  ],
+  "completed_milestones": [
+    "Development of the canonical scan pipeline in scan_engine.py",
+    "ML model inference integration with feature schema validation",
+    "Refactoring of templates into modular base/index/report structure",
+    "Migration to Bootstrap 5 for professional responsiveness",
+    "Implementation of background job polling for asynchronous scanning",
+    "Addition of WHOIS intelligence and DNS resolution checks",
+    "Setup of a background task for automatic screenshot cleanup",
+    "Favicon and character set optimization for clean browser console"
+  ],
+  "scan_flow": {
+    "1_input": "User submits URL via the hero scanner on the landing page.",
+    "2_pre_check": "Lightweight DNS and HTTP HEAD check to identify immediate unreachability.",
+    "3_asynchronous_start": "A unique Job ID (UUID) is generated, and a background thread initiates the scan engine.",
+    "4_lexical_analysis": "The URL string is decomposed into 30+ features (length, special chars, tokens, etc.).",
+    "5_domain_intel": "WHOIS records and DNS data are fetched to determine domain age and legitimacy.",
+    "6_browser_simulation": "Headless Chrome/Firefox loads the page to extract DOM features and a screenshot.",
+    "7_ml_inference": "A feature vector is built and passed to the Random Forest classifier for a phishing probability score.",
+    "8_content_analysis": "Layer 2 engine scans page text for threat categories (scams, gambling, malware lures).",
+    "9_verdict_generation": "The system synthesizes a human-friendly verdict, risk level, and evidence list.",
+    "10_final_delivery": "The UI displays the full report and allows for PDF export."
+  }
+}
