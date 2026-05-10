@@ -90,6 +90,86 @@ SUSPICIOUS_TOKENS = {
     "password",
     "auth",
     "support",
+    "download",
+    "app-download",
+    "dapp",
+    "claim",
+    "reward",
+    "bonus",
+    "free",
+    "gift",
+}
+
+# High-value brands commonly targeted by phishing
+BRAND_WATCHLIST: list[str] = [
+    # Crypto exchanges & wallets
+    "okx", "binance", "coinbase", "metamask", "trustwallet", "phantom",
+    "kraken", "bybit", "kucoin", "bitfinex", "crypto.com", "blockchain",
+    "uniswap", "pancakeswap", "sushiswap", "aave", "compound",
+    "ledger", "trezor", "exodus", "atomicwallet", "rabby",
+    # Major tech / banking
+    "paypal", "apple", "microsoft", "google", "amazon", "facebook",
+    "netflix", "spotify", "dropbox", "instagram", "whatsapp",
+    "chase", "wellsfargo", "bankofamerica", "citibank", "hsbc",
+    "barclays", "deutschebank", "revolut", "wise",
+    # Government / delivery scams
+    "usps", "fedex", "dhl", "ups", "royalmail", "dpd",
+    "irs", "gov", "hmrc", "cra",
+]
+
+# Common words to detect typosquatting
+COMMON_WORDS: set[str] = {
+    "login", "signin", "verify", "secure", "account", "update",
+    "confirm", "download", "support", "wallet", "app", "admin",
+    "portal", "dashboard", "settings", "profile", "password",
+    "reset", "activate", "payment", "invoice", "billing", "order",
+    "tracking", "service", "help", "contact", "market", "exchange",
+    "trade", "staking", "mining", "token", "nft", "defi", "web3",
+}
+
+# TLDs commonly associated with phishing infrastructure
+SUSPICIOUS_TLDS: set[str] = {
+    "tk", "ml", "ga", "cf", "gq",  # Free TLDs (Freenom)
+    "xyz", "top", "club", "online", "site", "website", "space",
+    "work", "buzz", "click", "link", "live", "digital",
+    "cc", "su", "pw", "bid", "trade", "webcam", "date",
+    "review", "country", "stream", "download", "racing",
+    "accountant", "science", "party", "faith", "loan", "win",
+}
+
+# Suspicious file extensions often used in phishing payloads
+SUSPICIOUS_EXTENSIONS: set[str] = {
+    ".exe", ".apk", ".scr", ".bat", ".cmd", ".msi",
+    ".jar", ".vbs", ".ps1", ".hta", ".iso", ".dmg",
+}
+
+# Words indicating fake urgency in page content
+URGENCY_WORDS: set[str] = {
+    "urgent", "immediately", "act now", "limited time", "expire",
+    "suspended", "blocked", "locked", "disabled", "deactivated",
+    "verify now", "confirm now", "update now", "warning",
+    "your account has been", "security alert", "unusual activity",
+    "suspicious activity", "unauthorized", "login attempt",
+    "click here now", "within 24 hours", "failure to",
+    "will be terminated", "access will be", "last warning",
+}
+
+# Words indicating fake security reassurance in page content
+SECURITY_WORDS: set[str] = {
+    "safe and secure", "trusted by", "verified by", "official",
+    "100% safe", "completely secure", "guaranteed safe",
+    "secure connection", "encrypted connection",
+    "256-bit encryption", "ssl secured", "data protected",
+    "privacy guaranteed", "secure server", "trusted site",
+    "secured by", "protected by", "security certified",
+}
+
+# Terms commonly found in hacked/compromised URL paths
+HACKED_PATH_TERMS: set[str] = {
+    "hacked", "hack", "crack", "cracked", "nulled", "null",
+    "leaked", "leak", "exploit", "bypass", "backdoor",
+    "shell", "rootkit", "malware", "injected", "defaced",
+    "compromised", "breach", "dump", "sql", "xss",
 }
 
 
@@ -187,7 +267,9 @@ CONTENT_THREAT_CATEGORIES: dict[str, dict] = {
         ],
         "url_keywords": [
             "giveaway", "airdrop", "freecrypto", "doublebtc", "mining-profit",
-            "claim-token", "crypto-reward",
+            "claim-token", "crypto-reward", "app-download", "appdownload",
+            "wallet-connect", "walletconnect", "dapp", "defi-",
+            "presale", "ido-", "launchpad", "bridge-",
         ],
         "weight": 4.5,
         "max_score": 100,
@@ -204,6 +286,62 @@ CONTENT_THREAT_WHITELIST_DOMAINS = {
     "bbc.com", "cnn.com", "reuters.com", "nytimes.com",
     "dawn.com", "geo.tv", "arynews.tv",
 }
+
+# ── Domain Reputation Index (Tranco top-sites, refreshed daily) ──
+_TRANCO_CACHE: set[str] | None = None
+_TRANCO_LOADED_AT: str = ""
+_TRANCO_TOP_N = 100_000  # Top 100K most-visited domains globally
+
+def _load_tranco_domains() -> set[str]:
+    """Load top-N domains from Tranco list. Cached in memory, refreshed daily.
+    On failure, keeps the last valid cache — never returns an empty set if data was loaded before."""
+    global _TRANCO_CACHE, _TRANCO_LOADED_AT
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if _TRANCO_CACHE is not None and _TRANCO_LOADED_AT == today:
+        return _TRANCO_CACHE
+
+    try:
+        from tranco import Tranco
+        t = Tranco(cache=True, cache_dir=Path(__file__).resolve().parent / ".tranco_cache")
+        latest = t.list()
+        domains = set(latest.top(_TRANCO_TOP_N))
+        if domains:
+            _TRANCO_CACHE = domains
+            _TRANCO_LOADED_AT = today
+            print(f"Tranco: loaded {len(domains)} top-{_TRANCO_TOP_N} domains (date: {latest.list_id or 'latest'})", flush=True)
+            return domains
+    except ImportError:
+        print("Tranco: package not installed — domain reputation check skipped.", flush=True)
+    except Exception as e:
+        print(f"Tranco: failed to refresh list — {e}.", flush=True)
+
+    # Keep previous cache if refresh fails
+    if _TRANCO_CACHE is not None:
+        print(f"Tranco: using cached data ({len(_TRANCO_CACHE)} domains from {_TRANCO_LOADED_AT})", flush=True)
+        return _TRANCO_CACHE
+
+    # First-ever load failed — try again next scan
+    _TRANCO_CACHE = set()
+    return _TRANCO_CACHE
+
+
+def is_domain_reputable(hostname: str) -> bool:
+    """Check if a domain appears in the global top-sites reputation index."""
+    domains = _load_tranco_domains()
+    clean = (hostname or "").lower().removeprefix("www.")
+    return clean in domains
+
+
+def domain_reputation_rank(hostname: str) -> int | None:
+    """Return Tranco rank (1 = best) or None if not found."""
+    try:
+        from tranco import Tranco
+        t = Tranco(cache=True, cache_dir=Path(__file__).resolve().parent / ".tranco_cache")
+        latest = t.list()
+        rank = latest.rank((hostname or "").lower().removeprefix("www."))
+        return rank if rank > 0 else None
+    except Exception:
+        return None
 
 def classify_content_threats(
     page_text: str,
@@ -388,8 +526,8 @@ def empty_scan_response() -> dict[str, Any]:
     }
 
 
-def quick_reachability_precheck(url: str, timeout: int = 4) -> dict:
-    """Lightweight DNS + HTTP HEAD pre-check run before the full scan.
+def quick_reachability_precheck(url: str, timeout: int = 5) -> dict:
+    """Lightweight HTTP pre-check run before the full scan.
     Returns {"reachable": bool, "reason": str} within ~timeout seconds."""
     try:
         parsed = urlparse(url)
@@ -397,37 +535,34 @@ def quick_reachability_precheck(url: str, timeout: int = 4) -> dict:
         if not host:
             return {"reachable": False, "reason": "Could not parse hostname from URL."}
 
-        # Step 1: DNS resolution
-        try:
-            socket.setdefaulttimeout(timeout)
-            socket.getaddrinfo(host, None)
-        except socket.gaierror:
-            return {"reachable": False, "reason": f"DNS lookup failed — no record found for '{host}'."}
-        except OSError:
-            return {"reachable": False, "reason": f"Network error during DNS lookup for '{host}'."}
+        # Run HTTP check in a thread so DNS hangs don't block forever
+        import concurrent.futures
 
-        # Step 2: HTTP HEAD request
-        try:
-            req = urllib.request.Request(url, method="HEAD")
-            req.add_header("User-Agent", "Mozilla/5.0 (compatible; ShieldScan/1.0)")
-            ctx = urllib.request.urlopen(req, timeout=timeout)
-            ctx.close()
-            return {"reachable": True, "reason": "Site responded to HEAD request."}
-        except urllib.error.HTTPError as e:
-            # Server replied (even errors like 403, 405 mean it's up)
-            if e.code in (400, 401, 403, 405, 406, 429, 503):
-                return {"reachable": True, "reason": f"Server responded with HTTP {e.code}."}
-            return {"reachable": False, "reason": f"HTTP error {e.code} — site may be down or blocking."}
-        except urllib.error.URLError as e:
-            reason = str(e.reason) if hasattr(e, "reason") else str(e)
-            if "timed out" in reason.lower():
-                return {"reachable": False, "reason": "Connection timed out — site is unresponsive."}
-            return {"reachable": False, "reason": f"Connection failed: {reason}."}
-        except Exception as e:
-            return {"reachable": False, "reason": f"HEAD request failed: {e}."}
+        def _http_check():
+            import requests as _requests
+            resp = _requests.get(url, timeout=timeout, allow_redirects=True, stream=True,
+                                  headers={"User-Agent": "Mozilla/5.0 (compatible; ShieldScan/1.0)"})
+            resp.close()
+            return resp.status_code
 
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+            future = ex.submit(_http_check)
+            status = future.result(timeout=timeout + 3)
+            return {"reachable": True, "reason": f"Server responded with HTTP {status}."}
+
+    except concurrent.futures.TimeoutError:
+        return {"reachable": False, "reason": "Connection timed out — site is unresponsive."}
     except Exception as e:
-        return {"reachable": False, "reason": f"Pre-check error: {e}."}
+        msg = str(e).lower()
+        if "timed out" in msg or "timeout" in msg:
+            return {"reachable": False, "reason": "Connection timed out — site is unresponsive."}
+        if "dns" in msg or "getaddrinfo" in msg or "nodename" in msg or "name or service not known" in msg:
+            return {"reachable": False, "reason": f"DNS lookup failed for '{host}'."}
+        if "connection" in msg and ("refused" in msg or "reset" in msg or "aborted" in msg):
+            return {"reachable": False, "reason": f"Connection refused or reset — '{host}' may be down."}
+        if hasattr(e, 'response') and e.response is not None:
+            return {"reachable": True, "reason": f"Server responded with HTTP {e.response.status_code}."}
+        return {"reachable": False, "reason": f"Could not reach site: {e.__class__.__name__}."}
 
 
 def is_valid_public_hostname(host: str) -> bool:
@@ -528,6 +663,7 @@ def validate_redirect_chain(url: str, max_hops: int = 8, timeout_seconds: int = 
         "warning": "",
         "hops": [],
         "final_url": url,
+        "security_headers": {"csp": 0, "xframe": 0, "hsts": 0, "xcontent": 0, "security_score": 0},
     }
 
     try:
@@ -570,6 +706,15 @@ def validate_redirect_chain(url: str, max_hops: int = 8, timeout_seconds: int = 
 
         if status_code not in {301, 302, 303, 307, 308} or not location:
             result["final_url"] = current_url
+            # Capture security headers from the final response
+            resp_headers = response.headers
+            result["security_headers"] = {
+                "csp": 1 if resp_headers.get("Content-Security-Policy") else 0,
+                "xframe": 1 if resp_headers.get("X-Frame-Options") else 0,
+                "hsts": 1 if resp_headers.get("Strict-Transport-Security") else 0,
+                "xcontent": 1 if resp_headers.get("X-Content-Type-Options") else 0,
+            }
+            result["security_headers"]["security_score"] = sum(result["security_headers"].values())
             return result
 
         next_url = urljoin(current_url, location)
@@ -585,6 +730,7 @@ def validate_redirect_chain(url: str, max_hops: int = 8, timeout_seconds: int = 
     result["ok"] = False
     result["error"] = "Too many redirects in pre-check."
     result["final_url"] = current_url
+    result["security_headers"] = {"csp": 0, "xframe": 0, "hsts": 0, "xcontent": 0, "security_score": 0}
     return result
 
 
@@ -679,11 +825,18 @@ def extract_domain_host_features(url: str) -> dict[str, Any]:
         "note": "Domain metadata partially available.",
     }
 
-    try:
+    import concurrent.futures
+
+    def _resolve():
         addr_info = socket.getaddrinfo(host_ascii, None)
-        ips = sorted({item[4][0] for item in addr_info if item and item[4]})
-        output["resolved_ips"] = ips[:5]
-        output["dns_resolved"] = bool(ips)
+        return sorted({item[4][0] for item in addr_info if item and item[4]})
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+            future = ex.submit(_resolve)
+            ips = future.result(timeout=4)
+            output["resolved_ips"] = ips[:5]
+            output["dns_resolved"] = bool(ips)
     except Exception:
         output["dns_resolved"] = False
 
@@ -962,6 +1115,75 @@ def _threshold_map(value: float, low: float, high: float) -> int:
     return -1
 
 
+def _edit_distance_simple(a: str, b: str, max_dist: int = 2) -> int | None:
+    """Quick edit-distance check; returns distance or None if > max_dist."""
+    if abs(len(a) - len(b)) > max_dist:
+        return None
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        curr = [i]
+        for j, cb in enumerate(b, 1):
+            cost = 0 if ca == cb else 1
+            curr.append(min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost))
+        if min(curr) > max_dist:
+            return None
+        prev = curr
+    return prev[-1] if prev[-1] <= max_dist else None
+
+
+def _detect_typosquatting(hostname: str) -> int:
+    """Check if the hostname contains typosquatted versions of common words or brands.
+    Returns 1 if typosquatting detected, 0 otherwise."""
+    # Split hostname into tokens by dots, hyphens, and digits
+    import re
+    tokens = re.split(r"[.\-\d]+", hostname.lower())
+    tokens = [t for t in tokens if len(t) >= 4]
+
+    for token in tokens:
+        # Check against common words
+        for word in COMMON_WORDS:
+            if len(word) < 4:
+                continue
+            dist = _edit_distance_simple(token, word, max_dist=2)
+            if dist is not None and dist > 0 and token != word:
+                return 1
+        # Check against brand names
+        for brand in BRAND_WATCHLIST:
+            if len(brand) < 4:
+                continue
+            dist = _edit_distance_simple(token, brand, max_dist=2)
+            if dist is not None and dist > 0 and token != brand:
+                return 1
+    return 0
+
+
+def _brand_in_hostname(hostname: str) -> int:
+    """Check if any brand from the watchlist appears in the hostname.
+    Only matches whole-word/subdomain segments, not substrings."""
+    host_lower = hostname.lower()
+    # Split hostname into segments by dots and hyphens
+    segments = set()
+    for part in host_lower.replace('.', ' ').replace('-', ' ').split():
+        segments.add(part)
+    for brand in BRAND_WATCHLIST:
+        if len(brand) < 3:
+            continue
+        if brand in segments:
+            return 1
+    return 0
+
+
+def _brand_in_path(path: str) -> int:
+    """Check if any brand appears in the URL path."""
+    path_lower = path.lower()
+    for brand in BRAND_WATCHLIST:
+        if len(brand) < 4:
+            continue
+        if brand in path_lower:
+            return 1
+    return 0
+
+
 def build_ml_feature_vector(
     normalized_url: str,
     url_lexical: dict[str, Any],
@@ -969,9 +1191,18 @@ def build_ml_feature_vector(
     domain_host: dict[str, Any],
     reachability: dict[str, Any],
     redirect_check: dict[str, Any],
+    page_text: str = "",
 ) -> dict[str, int | float]:
+    from urllib.parse import urlparse
+
     import re
     url = re.sub(r"^https?://", "", normalized_url)
+
+    # Parse URL components for advanced checks
+    parsed = urlparse(normalized_url)
+    hostname = (parsed.hostname or "").lower()
+    url_path = parsed.path.lower()
+    tld = domain_host.get("tld", "").lower()
 
     # Calculate basic lexical counts
     char_counts = {c: url.count(c) for c in ['@', '?', '-', '=', '.', '#', '%', '+', '$', '!', '*', ',', '//']}
@@ -980,10 +1211,34 @@ def build_ml_feature_vector(
 
     has_https = 1 if url_lexical.get("scheme") == "https" else 0
     is_live = 1 if reachability.get("state") == "reachable" else 0
-    
-    # Calculate some heuristic advanced features
-    path_underscore_count = url_lexical.get("path_depth", 0) # approximation
-    
+
+    # Advanced phishing checks
+    brand_in_host = _brand_in_hostname(hostname)
+    brand_in_path = _brand_in_path(url_path)
+    has_typosquat = _detect_typosquatting(hostname)
+    has_suspicious_tld = 1 if tld in SUSPICIOUS_TLDS else 0
+    has_suspicious_ext = 1 if any(url_path.endswith(ext) for ext in SUSPICIOUS_EXTENSIONS) else 0
+
+    # Suspicious tokens in the full URL (not just hostname)
+    lowered_url = normalized_url.lower()
+    suspicious_token_count = sum(1 for token in SUSPICIOUS_TOKENS if token in lowered_url)
+
+    # Page content text analysis
+    page_text_lower = (page_text or "").lower()
+    has_urgency = 1 if any(word in page_text_lower for word in URGENCY_WORDS) else 0
+    has_security = 1 if any(word in page_text_lower for word in SECURITY_WORDS) else 0
+
+    # Hacked terms in path
+    has_hacked_path = 1 if any(term in url_path for term in HACKED_PATH_TERMS) else 0
+
+    # Security headers from redirect check
+    sec = (redirect_check.get("security_headers") or {})
+    csp = sec.get("csp", 0)
+    xframe = sec.get("xframe", 0)
+    hsts = sec.get("hsts", 0)
+    xcontent = sec.get("xcontent", 0)
+    security_score = sec.get("security_score", 0)
+
     vec = {
         "url_len": len(url),
         "digits": digits_count,
@@ -997,45 +1252,45 @@ def build_ml_feature_vector(
         "web_ext_ratio": float(page_dom.get("external_anchor_ratio", 0.0) or 0.0),
         "web_unique_domains": int(page_dom.get("anchor_count", 0) or 0),
         "web_favicon": 1 if float(page_dom.get("external_favicon_ratio", 0.0) or 0.0) > 0 else 0,
-        "web_csp": 0,
-        "web_xframe": 0,
-        "web_hsts": 0,
-        "web_xcontent": 0,
-        "web_security_score": 0,
+        "web_csp": csp,
+        "web_xframe": xframe,
+        "web_hsts": hsts,
+        "web_xcontent": xcontent,
+        "web_security_score": security_score,
         "web_forms_count": int(page_dom.get("form_count", 0) or 0),
         "web_password_fields": int(page_dom.get("password_input_count", 0) or 0),
         "web_hidden_inputs": int(page_dom.get("hidden_element_count", 0) or 0),
         "web_has_login": 1 if int(page_dom.get("password_input_count", 0) or 0) > 0 else 0,
         "web_ssl_valid": has_https,
-        "phish_urgency_words": 0,
-        "phish_security_words": 0,
-        "phish_brand_mentions": 0,
-        "phish_brand_hijack": 0,
+        "phish_urgency_words": has_urgency,
+        "phish_security_words": has_security,
+        "phish_brand_mentions": brand_in_host or brand_in_path,
+        "phish_brand_hijack": 1 if (brand_in_host and has_typosquat) else 0,
         "phish_multiple_subdomains": 1 if url_lexical.get("subdomain_depth", 0) > 1 else 0,
         "phish_long_path": 1 if url_lexical.get("path_depth", 0) > 3 else 0,
         "phish_many_params": 1 if url_lexical.get("query_param_count", 0) > 2 else 0,
-        "phish_suspicious_tld": 0,
-        "phish_adv_exact_brand_match": 0,
-        "phish_adv_brand_in_subdomain": 0,
-        "phish_adv_brand_in_path": 0,
+        "phish_suspicious_tld": has_suspicious_tld,
+        "phish_adv_exact_brand_match": brand_in_host,
+        "phish_adv_brand_in_subdomain": brand_in_host,
+        "phish_adv_brand_in_path": brand_in_path,
         "phish_adv_hyphen_count": url.count('-'),
         "phish_adv_number_count": digits_count,
-        "phish_adv_suspicious_tld": 0,
-        "phish_adv_long_domain": 1 if len(domain_host.get("host", "")) > 30 else 0,
+        "phish_adv_suspicious_tld": has_suspicious_tld,
+        "phish_adv_long_domain": 1 if len(hostname) > 30 else 0,
         "phish_adv_many_subdomains": 1 if url_lexical.get("subdomain_depth", 0) > 2 else 0,
         "phish_adv_encoded_chars": url.count('%'),
-        "phish_adv_path_keywords": 0,
+        "phish_adv_path_keywords": 1 if (suspicious_token_count > 0 and url_path != "/") else 0,
         "phish_adv_has_redirect": 1 if url.count('//') > 1 else 0,
         "phish_adv_many_params": 1 if url_lexical.get("query_param_count", 0) > 3 else 0,
-        "path_has_hacked_terms": 0,
-        "suspicious_extension": 0,
+        "path_has_hacked_terms": has_hacked_path,
+        "suspicious_extension": has_suspicious_ext,
         "path_underscore_count": url.count('_'),
-        "is_gov_edu": 1 if domain_host.get("tld", "") in ["gov", "edu"] else 0,
+        "is_gov_edu": 1 if tld in ("gov", "edu") else 0,
     }
-    
+
     for c in ['@', '?', '-', '=', '.', '#', '%', '+', '$', '!', '*', ',', '//']:
         vec[c] = char_counts[c]
-        
+
     return vec
 
 
@@ -1086,6 +1341,22 @@ def predict_with_model(
     reachability: dict[str, Any],
     domain_host: dict[str, Any],
 ) -> dict[str, Any]:
+    # Skip ML for domains in the global reputation index (daily-updated top-sites)
+    host = (url_lexical.get("host") or "").lower()
+    if is_domain_reputable(host):
+        return {
+            "status": "ok",
+            "verdict": "Legitimate",
+            "risk_score": 0.0,
+            "confidence": 100.0,
+            "phishing_probability": 0.0,
+            "safe_probability": 1.0,
+            "model_version": "reputation",
+            "top_signals": [],
+            "rule_notes": [],
+            "error": "",
+        }
+
     bundle, bundle_error = load_model_bundle()
     if bundle is None:
         result = empty_prediction()
@@ -1197,7 +1468,7 @@ def build_extraction_payload(
     }
 
 
-def run_canonical_scan(raw_url: str, status_callback=None, job_id: str = None) -> dict[str, Any]:
+def run_canonical_scan(raw_url: str, status_callback=None, job_id: str = None, precheck_result: dict | None = None) -> dict[str, Any]:
     def set_status(msg):
         if status_callback:
             status_callback(msg)
@@ -1241,16 +1512,58 @@ def run_canonical_scan(raw_url: str, status_callback=None, job_id: str = None) -
     set_status("Querying domain and WHOIS records...")
     domain_host = extract_domain_host_features(normalized_url)
 
-    set_status("Running browser simulation (this may take a few seconds)...")
-    selenium_result = run_selenium_reachability_and_dom(normalized_url, timeout_seconds=BROWSER_TIMEOUT_SECONDS, job_id=job_id)
-    reachability = selenium_result["reachability"]
-    reachability["redirect_hops"] = len(redirect_check.get("hops", []))
+    # Run lightweight pre-check before committing to the heavy browser simulation
+    # Skip precheck for domains in the reputation index — known safe, no network needed
+    host_for_reputation = (url_lexical.get("host") or "").lower()
+    reputed = is_domain_reputable(host_for_reputation)
 
-    page_dom = selenium_result.get("dom_features", {})
-    page_text = selenium_result.get("page_text", "")
+    if reputed:
+        reachability = empty_reachability()
+        reachability.update({
+            "state": "reachable",
+            "label": "Reachable",
+            "detail": "Domain verified by global reputation index — full network checks skipped.",
+            "engine": "reputation",
+            "final_url": normalized_url,
+            "title": "",
+            "load_time": "",
+            "redirect_hops": len(redirect_check.get("hops", [])),
+        })
+        page_dom = {}
+        page_text = ""
+        extraction_status = "partial"
+        extraction_note = "Network checks skipped — domain is in the daily-updated global top-sites index."
+    else:
+        if precheck_result is None:
+            set_status("Checking if site is reachable...")
+            precheck_result = quick_reachability_precheck(normalized_url)
 
-    extraction_status = "full" if selenium_result.get("dom_status") == "full" else "partial"
-    extraction_note = selenium_result.get("dom_note", "")
+        if precheck_result.get("reachable"):
+            set_status("Running browser simulation (this may take a few seconds)...")
+            selenium_result = run_selenium_reachability_and_dom(normalized_url, timeout_seconds=BROWSER_TIMEOUT_SECONDS, job_id=job_id)
+            reachability = selenium_result["reachability"]
+            reachability["redirect_hops"] = len(redirect_check.get("hops", []))
+            page_dom = selenium_result.get("dom_features", {})
+            page_text = selenium_result.get("page_text", "")
+            extraction_status = "full" if selenium_result.get("dom_status") == "full" else "partial"
+            extraction_note = selenium_result.get("dom_note", "")
+        else:
+            reachability = empty_reachability()
+            reachability.update({
+                "state": "unreachable",
+                "label": "Unreachable",
+                "detail": precheck_result.get("reason", "Site could not be reached."),
+                "engine": "precheck",
+                "final_url": normalized_url,
+                "title": "",
+                "load_time": "",
+                "redirect_hops": len(redirect_check.get("hops", [])),
+            })
+            page_dom = {}
+            page_text = ""
+            extraction_status = "skipped"
+            extraction_note = f"Browser simulation skipped: {precheck_result.get('reason', 'site unreachable')}"
+
     if domain_host.get("status") == "partial":
         extraction_note = f"{extraction_note} {domain_host.get('note', '')}".strip()
 
@@ -1262,6 +1575,7 @@ def run_canonical_scan(raw_url: str, status_callback=None, job_id: str = None) -
         domain_host=domain_host,
         reachability=reachability,
         redirect_check=redirect_check,
+        page_text=page_text,
     )
 
     set_status("Evaluating phishing risk model...")

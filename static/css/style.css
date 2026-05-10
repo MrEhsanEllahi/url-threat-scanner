@@ -36,8 +36,8 @@ body::after {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,0.008) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.008) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
   z-index: -1;
@@ -46,6 +46,15 @@ body::after {
 .backdrop-blur {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Navbar auto-hide ── */
+nav.navbar {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+nav.navbar.hidden {
+  transform: translateY(-100%);
 }
 
 /* ── Typography & Components ── */
@@ -62,8 +71,8 @@ body::after {
 
 /* ── Cards ── */
 .card {
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(22, 22, 36, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 1.25rem;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -73,7 +82,7 @@ body::after {
 
 .card-header {
   background: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   padding: 1.25rem 1.5rem;
 }
 
@@ -103,8 +112,8 @@ body::after {
 }
 
 .scanner-box {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(22, 22, 36, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 1.25rem;
   transition: all 0.3s ease;
 }
@@ -134,15 +143,17 @@ body::after {
 .verdict-card.danger { border-color: rgba(var(--danger-rgb), 0.3); background: linear-gradient(135deg, rgba(var(--danger-rgb), 0.12), rgba(var(--danger-rgb), 0.04)); }
 .verdict-card.warning { border-color: rgba(var(--warning-rgb), 0.3); background: linear-gradient(135deg, rgba(var(--warning-rgb), 0.12), rgba(var(--warning-rgb), 0.04)); }
 .verdict-card.safe { border-color: rgba(var(--safe-rgb), 0.3); background: linear-gradient(135deg, rgba(var(--safe-rgb), 0.12), rgba(var(--safe-rgb), 0.04)); }
+.verdict-card.neutral { border-color: rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); }
 
 .verdict-card.danger .verdict-glow { background: rgb(var(--danger-rgb)); }
 .verdict-card.warning .verdict-glow { background: rgb(var(--warning-rgb)); }
 .verdict-card.safe .verdict-glow { background: rgb(var(--safe-rgb)); }
+.verdict-card.neutral .verdict-glow { background: rgba(255,255,255,0.3); opacity: 0.06; }
 
 /* ── Confidence Meter ── */
 .conf-bar-track {
   height: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(30, 30, 46, 0.8);
   border-radius: 99px;
 }
 
@@ -171,6 +182,7 @@ body::after {
 .reveal-delay-1 { transition-delay: 0.15s; }
 .reveal-delay-2 { transition-delay: 0.3s; }
 .reveal-delay-3 { transition-delay: 0.45s; }
+.reveal-delay-4 { transition-delay: 0.6s; }
 
 /* ── Utils ── */
 .text-gradient-purple {
@@ -180,8 +192,8 @@ body::after {
 }
 
 .badge-outline {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(22, 22, 36, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--bs-secondary-color);
 }
 
@@ -200,6 +212,143 @@ body::after {
 
 .ls-wide {
   letter-spacing: 0.08em;
+}
+
+/* ── Why Section ── */
+.why-card {
+  background: rgba(22, 22, 36, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.25rem;
+  padding: 1.75rem 1.5rem;
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+  height: 100%;
+}
+
+.why-card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(30, 30, 50, 0.7);
+  transform: translateY(-4px);
+}
+
+.why-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.why-stat-num {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.why-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bs-secondary-color);
+}
+
+/* ── How It Works / Flow Section ── */
+.flow-steps {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.flow-steps::before {
+  content: '';
+  position: absolute;
+  left: 27px;
+  top: 28px;
+  bottom: 28px;
+  width: 2px;
+  background: linear-gradient(to bottom,
+    rgba(124,58,237,0.5) 0%,
+    rgba(6,182,212,0.5) 50%,
+    rgba(16,185,129,0.3) 100%);
+  border-radius: 2px;
+}
+
+.flow-step {
+  display: flex;
+  gap: 1.75rem;
+  align-items: flex-start;
+  padding: 0.5rem 0 2rem;
+  position: relative;
+}
+
+.flow-step:last-child {
+  padding-bottom: 0;
+}
+
+.flow-num {
+  width: 56px;
+  height: 56px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.flow-num.purple { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+.flow-num.cyan { background: rgba(6,182,212,0.2); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
+.flow-num.blue { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.flow-num.violet { background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
+.flow-num.indigo { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+.flow-num.green { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+
+.flow-content {
+  padding-top: 0.5rem;
+  flex: 1;
+}
+
+.flow-content-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin-bottom: 0.375rem;
+  letter-spacing: -0.01em;
+}
+
+.flow-content-desc {
+  font-size: 0.875rem;
+  color: var(--bs-secondary-color);
+  line-height: 1.7;
+  max-width: 560px;
+}
+
+.flow-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+}
+
+.flow-tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.625rem;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--bs-tertiary-color);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+  .flow-steps::before { left: 22px; }
+  .flow-num { width: 46px; height: 46px; font-size: 15px; border-radius: 0.75rem; }
 }
 
 /* ── Autofill Override (dark theme) ── */

@@ -11,10 +11,20 @@ from pathlib import Path
 from flask import Flask, jsonify, redirect, render_template, request, url_for, make_response
 
 from scan_engine import empty_scan_response, normalize_and_validate_url, run_canonical_scan, quick_reachability_precheck
+from scan_engine import is_domain_reputable, _load_tranco_domains, domain_reputation_rank
 from pdf_report import build_pdf
 
 app = Flask(__name__)
 job_store = {}
+
+# Warm up the domain reputation index on startup (async, non-blocking)
+def _warmup_reputation():
+    try:
+        _load_tranco_domains()
+    except Exception:
+        pass
+
+threading.Thread(target=_warmup_reputation, daemon=True).start()
 
 CACHE_DIR = "static/cache"
 
@@ -259,6 +269,18 @@ def compute_scan_confidence(scan: dict) -> dict:
     layers.append({"name": "URL Structure", "status": "done",
                    "desc": "30+ lexical features extracted from the URL string"})
 
+    # Layer 1b — Domain Reputation Index (daily-updated global top-sites)
+    host = (features.get("url_lexical", {}) or {}).get("host", "")
+    if host and is_domain_reputable(host):
+        rank = domain_reputation_rank(host)
+        rank_str = f" — ranked #{rank:,} globally" if rank else ""
+        score += 15
+        layers.append({"name": "Domain Reputation Index", "status": "done",
+                       "desc": f"Domain appears in top 100K most-visited sites worldwide{rank_str}"})
+    else:
+        layers.append({"name": "Domain Reputation Index", "status": "partial" if host else "failed",
+                       "desc": "Domain not found in global top-sites index"})
+
     # Layer 2 — Domain & WHOIS (15 pts)
     whois_ok = bool(domain_host.get("whois_available"))
     dns_ok = bool(domain_host.get("dns_resolved"))
@@ -372,6 +394,14 @@ def build_user_friendly_summary(scan: dict) -> dict:
         headline = "Full risk decision is not available yet."
 
     quick_facts: list[str] = []
+    # Domain reputation check
+    host = ((scan.get("features") or {}).get("url_lexical") or {}).get("host", "")
+    if host and is_domain_reputable(host):
+        rank = domain_reputation_rank(host)
+        if rank:
+            quick_facts.append(f"Domain ranked #{rank:,} among top global sites — daily-updated reputation index.")
+        else:
+            quick_facts.append("Domain verified against daily-updated global top-sites reputation index.")
     if isinstance(risk_score, (int, float)):
         quick_facts.append(f"Estimated phishing risk: {float(risk_score):.2f}%")
     if isinstance(confidence, (int, float)):
@@ -401,6 +431,22 @@ def build_user_friendly_summary(scan: dict) -> dict:
         reasons.append("Limited indicators were available for explanation.")
 
     evidence_items: list[dict[str, str]] = []
+
+    # Domain reputation check (daily-updated global index)
+    host = ((scan.get("features") or {}).get("url_lexical") or {}).get("host", "")
+    if host and is_domain_reputable(host):
+        rank = domain_reputation_rank(host)
+        rank_desc = f" — ranked #{rank:,} globally" if rank else ""
+        evidence_items.append({
+            "title": "Global Domain Authority",
+            "feature": "reputation_index",
+            "value": "Verified" if rank else "Listed",
+            "impact": "+trust",
+            "direction": "safer",
+            "finding": f"This domain appears in a daily-updated index of the top 100,000 most-visited websites worldwide{rank_desc}.",
+            "fact": "Legitimate sites consistently rank among the world's most-visited domains; phishing sites rarely appear in top-sites indices.",
+        })
+
     for signal in (scan.get("top_signals", []) or [])[:4]:
         feature = str(signal.get("feature", "Signal"))
         value = int(signal.get("value", 0))
@@ -520,8 +566,7 @@ def build_user_friendly_summary(scan: dict) -> dict:
 
 @app.route("/favicon.ico")
 def favicon():
-    # Minimal 1x1 transparent GIF or a small ShieldScan-colored dot
-    return "", 204
+    return redirect(url_for('static', filename='icons/favicon-32.png'))
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -548,7 +593,7 @@ def index():
                 if jid in job_store:
                     job_store[jid]["precheck"] = precheck
 
-                scan = run_canonical_scan(url, status_callback=cb, job_id=jid)
+                scan = run_canonical_scan(url, status_callback=cb, job_id=jid, precheck_result=precheck)
                 friendly = build_user_friendly_summary(scan)
                 if jid in job_store:
                     job_store[jid]["scan"] = scan
@@ -674,4 +719,4 @@ def export_pdf(job_id):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=True)

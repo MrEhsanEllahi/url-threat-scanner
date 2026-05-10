@@ -68,7 +68,7 @@
     <div class="row g-3">
       {% for h in history[:9] %}
       <div class="col-md-6 col-lg-4">
-        <div class="card h-100 p-3 border-secondary border-opacity-10 bg-white bg-opacity-5 hover-lift">
+        <div class="card h-100 p-3 border-secondary border-opacity-10 hover-lift">
           <div class="d-flex align-items-center gap-2 mb-2">
             <span class="small text-muted">{{ h.timestamp }}</span>
           </div>
@@ -158,7 +158,7 @@
 
       <div class="col-lg-6 reveal reveal-delay-2">
         <div class="card p-0 border-secondary border-opacity-25 shadow-lg overflow-hidden bg-black bg-opacity-50">
-          <div class="card-header bg-white bg-opacity-5 py-2 px-3 d-flex align-items-center gap-2">
+          <div class="card-header py-2 px-3 d-flex align-items-center gap-2">
             <div class="d-flex gap-1">
               <span class="rounded-circle bg-danger" style="width: 10px; height: 10px;"></span>
               <span class="rounded-circle bg-warning" style="width: 10px; height: 10px;"></span>
@@ -186,6 +186,187 @@
               <div><span class="text-secondary">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="text-info">HTTPS</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-success">↓safe</span></div>
               <div class="text-muted">&nbsp;</div>
               <div><span class="text-secondary">$</span> <span class="d-inline-block bg-primary align-middle" style="width: 8px; height: 15px;"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why It Matters Section -->
+  <section class="py-5 mt-5" id="why">
+    <div class="reveal">
+      <div class="lp-eyebrow cyan reveal px-3 py-1 d-inline-block rounded-pill mb-3" style="background:rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); color:var(--accent2); font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;">Why It Matters</div>
+      <h2 class="display-5 fw-bold mb-3">Phishing is the #1 entry<br>point for cyberattacks.</h2>
+      <p class="lead text-secondary mb-5">A single malicious link can compromise credentials, install malware, or drain a bank account. Most people click before they think.</p>
+    </div>
+
+    <div class="row g-4 mt-4">
+      <div class="col-md-6 col-lg-4 reveal reveal-delay-1">
+        <div class="why-card">
+          <div class="why-icon-box mb-3" style="background:rgba(239,68,68,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="why-stat-num mb-1" style="color:#f87171;">3.4B</div>
+          <div class="why-stat-label mb-3">Phishing emails sent daily</div>
+          <h6 class="fw-bold mb-1">Staggering volume</h6>
+          <p class="small text-secondary mb-0">Phishing emails account for over 80% of reported security incidents globally. Attackers send billions of lures every single day.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal reveal-delay-2">
+        <div class="why-card">
+          <div class="why-icon-box mb-3" style="background:rgba(245,158,11,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="why-stat-num mb-1" style="color:#fbbf24;">36%</div>
+          <div class="why-stat-label mb-3">Of breaches start with phishing</div>
+          <h6 class="fw-bold mb-1">The primary vector</h6>
+          <p class="small text-secondary mb-0">More than a third of all data breaches begin with a phishing link. It is consistently the most effective initial access technique for attackers.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal reveal-delay-3">
+        <div class="why-card">
+          <div class="why-icon-box mb-3" style="background:rgba(124,58,237,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <div class="why-stat-num mb-1" style="color:#a78bfa;">$4.9M</div>
+          <div class="why-stat-label mb-3">Average cost per breach</div>
+          <h6 class="fw-bold mb-1">Enormous financial damage</h6>
+          <p class="small text-secondary mb-0">The average cost of a data breach reached $4.9M in 2024. For SMBs, a single successful phishing attack can be fatal to the business.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal reveal-delay-1">
+        <div class="why-card">
+          <div class="why-icon-box mb-3" style="background:rgba(6,182,212,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="why-stat-num mb-1" style="color:#67e8f9;">20s</div>
+          <div class="why-stat-label mb-3">How fast phishing sites appear</div>
+          <h6 class="fw-bold mb-1">Lightning-fast deployment</h6>
+          <p class="small text-secondary mb-0">A new phishing site is created every 20 seconds. Traditional blacklists cannot keep up — which is why behaviour-based ML detection is essential.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal reveal-delay-2">
+        <div class="why-card">
+          <div class="why-icon-box mb-3" style="background:rgba(16,185,129,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="why-stat-num mb-1" style="color:#34d399;">97%</div>
+          <div class="why-stat-label mb-3">Of users cannot spot phishing</div>
+          <h6 class="fw-bold mb-1">Human error is universal</h6>
+          <p class="small text-secondary mb-0">Studies show 97% of people cannot reliably identify a phishing email. Security awareness alone is not a defence — automated analysis is.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal reveal-delay-3">
+        <div class="why-card">
+          <div class="why-icon-box mb-3" style="background:rgba(239,68,68,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="why-stat-num mb-1" style="color:#f87171;">+150%</div>
+          <div class="why-stat-label mb-3">Rise in mobile phishing</div>
+          <h6 class="fw-bold mb-1">Growing attack surface</h6>
+          <p class="small text-secondary mb-0">Mobile phishing attacks have grown 150%+ year-over-year. Smaller screens make deceptive URLs even harder to spot without a tool like this.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works / Flow Section -->
+  <section class="py-5 mt-5" id="how-it-works">
+    <div class="reveal">
+      <div class="lp-eyebrow green px-3 py-1 d-inline-block rounded-pill mb-3" style="background:rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color:#34d399; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;">How It Works</div>
+      <h2 class="display-5 fw-bold mb-3">Six stages of<br>threat analysis.</h2>
+      <p class="lead text-secondary mb-0">Every scan runs through a structured pipeline. Each stage adds evidence — from URL structure to live page content — before a final verdict is produced.</p>
+    </div>
+
+    <div class="row mt-5 gx-5">
+      <div class="col-lg-6">
+        <div class="flow-steps">
+          <div class="flow-step reveal reveal-delay-1">
+            <div class="flow-num purple">1</div>
+            <div class="flow-content">
+              <div class="flow-content-title">URL Validation &amp; Normalisation</div>
+              <div class="flow-content-desc">The submitted link is cleaned, validated, and normalised. Private IPs, localhost addresses, and malformed inputs are rejected immediately.</div>
+              <div class="flow-tags">
+                <span class="flow-tag">Scheme check</span>
+                <span class="flow-tag">IP gate</span>
+                <span class="flow-tag">Redirect pre-check</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-step reveal reveal-delay-2">
+            <div class="flow-num cyan">2</div>
+            <div class="flow-content">
+              <div class="flow-content-title">Lexical Feature Extraction</div>
+              <div class="flow-content-desc">30+ structural features are extracted from the URL string itself — length, special characters, subdomain depth, suspicious tokens, TLD risk, and more.</div>
+              <div class="flow-tags">
+                <span class="flow-tag">URL length</span>
+                <span class="flow-tag">Hyphen count</span>
+                <span class="flow-tag">Token analysis</span>
+                <span class="flow-tag">TLD risk</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-step reveal reveal-delay-3">
+            <div class="flow-num blue">3</div>
+            <div class="flow-content">
+              <div class="flow-content-title">Domain &amp; WHOIS Intelligence</div>
+              <div class="flow-content-desc">The domain is resolved via DNS, registration metadata is fetched from WHOIS, and signals like domain age, registrar, and country are recorded.</div>
+              <div class="flow-tags">
+                <span class="flow-tag">DNS resolution</span>
+                <span class="flow-tag">Domain age</span>
+                <span class="flow-tag">Registrar check</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="flow-steps">
+          <div class="flow-step reveal reveal-delay-2">
+            <div class="flow-num violet">4</div>
+            <div class="flow-content">
+              <div class="flow-content-title">Browser Simulation &amp; DOM Extraction</div>
+              <div class="flow-content-desc">A headless browser loads the page and extracts DOM features — form counts, password fields, external resource ratios, iframes, and a screenshot.</div>
+              <div class="flow-tags">
+                <span class="flow-tag">Headless Chrome</span>
+                <span class="flow-tag">DOM features</span>
+                <span class="flow-tag">Screenshot</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-step reveal reveal-delay-3">
+            <div class="flow-num indigo">5</div>
+            <div class="flow-content">
+              <div class="flow-content-title">Machine Learning Inference</div>
+              <div class="flow-content-desc">All collected features are assembled into a vector and fed to the trained ML classifier. It outputs a phishing probability score, confidence, and top signal weights.</div>
+              <div class="flow-tags">
+                <span class="flow-tag">Random Forest</span>
+                <span class="flow-tag">Risk score</span>
+                <span class="flow-tag">Feature importance</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-step reveal reveal-delay-4">
+            <div class="flow-num green">6</div>
+            <div class="flow-content">
+              <div class="flow-content-title">Content Threat Classification</div>
+              <div class="flow-content-desc">The extracted page text is scanned for threat categories — credential phishing, financial scam, fake shops, gambling, and more — using a keyword-weighted scoring engine.</div>
+              <div class="flow-tags">
+                <span class="flow-tag">Layer 2 detection</span>
+                <span class="flow-tag">Keyword scoring</span>
+                <span class="flow-tag">Threat categories</span>
+              </div>
             </div>
           </div>
         </div>

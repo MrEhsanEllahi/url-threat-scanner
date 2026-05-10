@@ -349,16 +349,28 @@ def build_pdf(scan: dict, friendly: dict, input_url: str) -> bytes:
     reachability = scan.get("reachability") or {}
     domain_host = (scan.get("features") or {}).get("domain_host") or {}
 
+    final_url_raw = reachability.get("final_url") or ""
+    if final_url_raw.startswith("data:"):
+        final_url_display = "Page content could not be loaded — no valid final URL recorded."
+    else:
+        final_url_display = _safe(final_url_raw)
+
+    reach_state = _safe(reachability.get("state", "")).lower()
+    reach_label = {
+        "reachable": "Reachable",
+        "timeout": "Timed Out",
+        "unreachable": "Unreachable",
+        "setup_required": "Could Not Reach",
+    }.get(reach_state, _safe(reachability.get("state", "")).title())
+
+    if reach_state == "unreachable":
+        reach_label += " — only URL-level signals were available."
+
     overview_rows = [
         ("Submitted URL", _safe(input_url)),
         ("Normalised URL", _safe(validation.get("normalized_url"))),
-        ("Reachability", {
-            "reachable": "Reachable",
-            "timeout": "Timed Out",
-            "unreachable": "Unreachable",
-            "setup_required": "Could Not Reach",
-        }.get(_safe(reachability.get("state", "")).lower(), _safe(reachability.get("state", "")).title())),
-        ("Final URL After Redirects", _safe(reachability.get("final_url"))),
+        ("Reachability", reach_label),
+        ("Final URL After Redirects", final_url_display),
         ("Page Title", _safe(reachability.get("title"))),
         ("Load Time", _safe(reachability.get("load_time"))),
         ("Redirect Hops", _safe(reachability.get("redirect_hops"))),
@@ -373,7 +385,7 @@ def build_pdf(scan: dict, friendly: dict, input_url: str) -> bytes:
     if evidence_items:
         story += _section("Evidence & Signal Analysis", s)
 
-        col_w = [usable_w * 0.30, usable_w * 0.44, usable_w * 0.14, usable_w * 0.12]
+        col_w = [usable_w * 0.26, usable_w * 0.48, usable_w * 0.13, usable_w * 0.13]
         header_row = [
             Paragraph("Signal", s["table_header"]),
             Paragraph("Finding", s["table_header"]),
@@ -501,7 +513,10 @@ def build_pdf(scan: dict, friendly: dict, input_url: str) -> bytes:
         ]
         # Filter out empty rows
         lex_rows = [(k, v) for k, v in lex_rows if v != "—"]
-        story.append(_kv_table(lex_rows, s))
+        if lex_rows:
+            story.append(_kv_table(lex_rows, s))
+        else:
+            story.append(Paragraph("No lexical data was extracted for this URL.", s["body_muted"]))
 
     # ════════════════════════════════════════════════════════════
     # SECTION 5 — Domain & WHOIS
@@ -521,7 +536,10 @@ def build_pdf(scan: dict, friendly: dict, input_url: str) -> bytes:
         ("TLD", _safe(domain_host.get("tld"))),
     ]
     whois_rows = [(k, v) for k, v in whois_rows if v != "—"]
-    story.append(_kv_table(whois_rows, s))
+    if whois_rows:
+        story.append(_kv_table(whois_rows, s))
+    else:
+        story.append(Paragraph("No WHOIS or domain data was available for this URL.", s["body_muted"]))
 
     # ════════════════════════════════════════════════════════════
     # SECTION 6 — Content Threat Analysis
@@ -543,7 +561,7 @@ def build_pdf(scan: dict, friendly: dict, input_url: str) -> bytes:
 
     if content_threats:
         story.append(Spacer(1, 6))
-        ct_col_w = [usable_w * 0.25, usable_w * 0.52, usable_w * 0.23]
+        ct_col_w = [usable_w * 0.22, usable_w * 0.58, usable_w * 0.20]
         ct_header = [
             Paragraph("Category", s["table_header"]),
             Paragraph("Description", s["table_header"]),
@@ -569,7 +587,10 @@ def build_pdf(scan: dict, friendly: dict, input_url: str) -> bytes:
         ]))
         story.append(ctt)
     else:
-        story.append(Paragraph("No specific content threats were detected by the content analysis layer.", s["body_muted"]))
+        if content_verdict == "Not analyzed":
+            story.append(Paragraph("Content analysis was not performed — the site was unreachable or page content could not be extracted.", s["body_muted"]))
+        else:
+            story.append(Paragraph("No specific content threats were detected by the content analysis layer.", s["body_muted"]))
 
     # ════════════════════════════════════════════════════════════
     # SECTION 7 — Rule-based Notes
