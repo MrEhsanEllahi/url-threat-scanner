@@ -247,6 +247,29 @@ def _friendly_scan_warning(error_text: str) -> str:
     return text
 
 
+def _extract_final_exception_line(text: str) -> str:
+    """Given text containing newlines, walk backward to find the last meaningful line.
+
+    Skips traceback frame headers (``File "..."``, indented lines) and the
+    ``Traceback (most recent call last):`` preamble.  Returns the original
+    string unchanged if no newlines are present.
+    """
+    if "\n" not in text:
+        return text
+
+    for line in reversed(text.strip().split("\n")):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("File ") or stripped.startswith("  "):
+            continue
+        if "Traceback" in stripped:
+            continue
+        return stripped
+
+    return text
+
+
 def _sanitize_error_message(error_text: str) -> str:
     """Convert an internal error string into a short, user-safe message.
 
@@ -264,17 +287,7 @@ def _sanitize_error_message(error_text: str) -> str:
         return known
 
     # Looks like a full traceback -- keep only the final exception line
-    if "\n" in text:
-        lines = text.strip().split("\n")
-        for line in reversed(lines):
-            stripped = line.strip()
-            if stripped.startswith("File ") or stripped.startswith("  "):
-                continue
-            if "Traceback" in stripped:
-                continue
-            if stripped:
-                text = stripped
-                break
+    text = _extract_final_exception_line(text)
 
     # Truncate anything still unreasonably long
     if len(text) > 200:
