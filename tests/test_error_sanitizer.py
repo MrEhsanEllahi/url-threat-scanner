@@ -189,5 +189,67 @@ class TestSanitizeErrorMessage(unittest.TestCase):
         )
 
 
+class TestResultPageMessageSanitization(unittest.TestCase):
+    """Route-level test: result_page() must sanitize the error message."""
+
+    def setUp(self):
+        from app import app, job_store
+        self.app = app
+        self.job_store = job_store
+        self.client = app.test_client()
+        # Clean up any leftover job with our test id
+        self.test_job_id = "test-sanitize-msg-job"
+        self.job_store.pop(self.test_job_id, None)
+
+    def tearDown(self):
+        self.job_store.pop(self.test_job_id, None)
+
+    def test_result_page_error_message_is_sanitized(self):
+        """The message rendered on the result page for a failed scan must
+        not leak traceback frames, file paths, or indented source lines."""
+        # Simulate a completed failed scan whose validation.error contains
+        # a full Python traceback with file paths and indented source code.
+        traceback_error = (
+            'Traceback (most recent call last):\n'
+            '  File "/app/scan_engine.py", line 42, in run_canonical_scan\n'
+            '    result = selenium_fetch(url)\n'
+            '  File "/app/selenium_fetcher.py", line 15, in selenium_fetch\n'
+            '    raise RuntimeError("Browser crashed")\n'
+            'RuntimeError: Browser crashed'
+        )
+        self.job_store[self.test_job_id] = {
+            "input_url": "https://example.com",
+            "done": True,
+            "status": "error",
+            "scan": {
+                "validation": {
+                    "ok": False,
+                    "normalized_url": "https://example.com",
+                    "error": traceback_error,
+                },
+                "errors": [traceback_error],
+            },
+            "friendly": {"level": "Error", "warnings": ["An internal processing error occurred."]},
+        }
+
+        resp = self.client.get(f"/result/{self.test_job_id}")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.data.decode("utf-8")
+
+        # The sanitized message must NOT contain traceback frame details
+        self.assertNotIn('File "', html,
+                         "Traceback frame headers must not leak into the result page HTML.")
+        self.assertNotIn("Traceback (most recent call last)", html,
+                         "Traceback preamble must not leak into the result page HTML.")
+        self.assertNotIn("run_canonical_scan", html,
+                         "Source-code identifiers must not leak into the result page HTML.")
+        self.assertNotIn('/app/scan_engine.py', html,
+                         "File paths must not leak into the result page HTML.")
+
+        # The sanitized message SHOULD contain the final exception text
+        self.assertIn("Browser crashed", html,
+                      "The sanitized message should preserve the exception message.")
+
+
 if __name__ == "__main__":
     unittest.main()

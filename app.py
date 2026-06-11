@@ -706,7 +706,7 @@ def result_page(job_id):
     message = (
         "Scan completed successfully."
         if status_str == "ok"
-        else (scan.get("validation", {}).get("error") or "Validation failed.")
+        else _sanitize_error_message(scan.get("validation", {}).get("error") or "Validation failed.")
     )
 
     return render_template(
