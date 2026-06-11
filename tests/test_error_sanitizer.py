@@ -65,6 +65,26 @@ class TestSanitizeErrorMessage(unittest.TestCase):
             "A Python traceback should be stripped down to the final exception line.",
         )
 
+    def test_multi_frame_traceback_with_indented_source_lines(self):
+        """A multi-frame traceback with indented source-code lines before
+        the final exception should skip frame headers and source snippets,
+        returning only the last exception line."""
+        multi_frame = (
+            'Traceback (most recent call last):\n'
+            '  File "/app/utils.py", line 42, in process\n'
+            '    result = dangerous_call(url)\n'
+            '  File "/app/scan.py", line 15, in dangerous_call\n'
+            '    raise SecurityError("Untrusted input")\n'
+            'SecurityError: Untrusted input'
+        )
+        result = _sanitize_error_message(multi_frame)
+        self.assertEqual(
+            result,
+            "SecurityError: Untrusted input",
+            "Should return the final exception line, skipping frame headers "
+            "and indented source-code lines.",
+        )
+
     # ------------------------------------------------------------------
     # Spec example 5: very long error → truncated with "..."
     # ------------------------------------------------------------------
