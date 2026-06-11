@@ -1,0 +1,111 @@
+{
+  "title": "ShieldScan Model Evaluation Flow",
+  "description": "Complete flow showing how the ML model is trained, evaluated, and metrics are stored",
+  "steps": [
+    {
+      "step": 1,
+      "name": "Dataset Load",
+      "code": "X, y = load_dataset(path)",
+      "file": "train_model.py",
+      "line": 33,
+      "description": "CSV se 60 features + type column load hoti hai. type me 'benign' ya 'phishing' values hain."
+    },
+    {
+      "step": 2,
+      "name": "Train/Test Split",
+      "code": "train_test_split(X, y, test_size=0.2, stratify=y)",
+      "file": "train_model.py",
+      "line": 178,
+      "description": "80% training, 20% test data. stratify=y ensures class ratio same rahe dono sets mein."
+    },
+    {
+      "step": 3,
+      "name": "Model Training",
+      "code": "selected_model.fit(X_model_train, y_model_train)",
+      "file": "train_model.py",
+      "line": 187,
+      "description": "Random Forest classifier train hota hai training data par. Fast mode: n_estimators=200, max_depth=15."
+    },
+    {
+      "step": 4,
+      "name": "Calibration",
+      "code": "CalibratedClassifierCV(selected_model, method='sigmoid', cv='prefit')",
+      "file": "train_model.py",
+      "line": 190,
+      "description": "Sigmoid calibration se predicted probabilities ko real-world probabilities mein convert karta hai. Is se risk_score aur confidence accurate hotay hain."
+    },
+    {
+      "step": 5,
+      "name": "Model Evaluation",
+      "code": "metrics = evaluate_model(calibrated_model, X_test, y_test)",
+      "file": "train_model.py",
+      "line": 193,
+      "description": "Trained model ko test set par evaluate karta hai. Ye function internally ye karta hai: y_pred = model.predict(X_test), y_prob = model.predict_proba(X_test)[:, 1], phir sklearn k functions se ROC-AUC, PR-AUC, classification_report, confusion_matrix compute hoti hai."
+    },
+    {
+      "step": 6,
+      "name": "Save in Bundle",
+      "code": "bundle = make_bundle(calibrated_model, selected_name, cv_auc, metrics, X_test, y_test)",
+      "file": "train_model.py",
+      "line": 194,
+      "description": "Model + features + schema_hash + sare metrics pickle format mein artifacts/phishing_model_bundle.pkl file mein save hotay hain."
+    },
+    {
+      "step": 7,
+      "name": "Bundle Read",
+      "code": "load_model_bundle()",
+      "file": "scan_engine.py",
+      "line": 1297,
+      "description": "Pickle file se bundle dict load karta hai. Cached hota hai _MODEL_CACHE mein dobara load na ho."
+    },
+    {
+      "step": 8,
+      "name": "Metrics Extraction",
+      "code": "bundle['metrics']",
+      "file": "evaluate_model_metrics.py",
+      "line": 34,
+      "description": "Bundle dict se 'metrics' key se evaluation results nikalte hain. Ye wahi data hai jo step 5 mein compute hua tha."
+    }
+  ],
+  "evaluate_model_function_detail": {
+    "file": "train_model.py",
+    "lines": "118-130",
+    "code": "def evaluate_model(model, X_test, y_test):\n    y_pred = model.predict(X_test)\n    y_prob = model.predict_proba(X_test)[:, 1]\n    report = classification_report(y_test, y_pred, output_dict=True, zero_division=0)\n    roc_auc = float(roc_auc_score(y_test, y_prob))\n    pr_auc = float(average_precision_score(y_test, y_prob))\n    cm = confusion_matrix(y_test, y_pred).tolist()\n    return {\n        'classification_report': report,\n        'roc_auc': roc_auc,\n        'pr_auc': pr_auc,\n        'confusion_matrix': cm,\n    }"
+  },
+  "bundle_structure": {
+    "keys": [
+      "model",
+      "feature_columns",
+      "schema_hash",
+      "model_version",
+      "selected_model",
+      "cv_auc_mean",
+      "metrics",
+      "top_global_features",
+      "trained_at_utc"
+    ],
+    "metrics_subkeys": [
+      "classification_report",
+      "roc_auc",
+      "pr_auc",
+      "confusion_matrix"
+    ]
+  },
+  "results": {
+    "model": "random_forest",
+    "version": "2.1.0",
+    "roc_auc": 0.9508,
+    "pr_auc": 0.9326,
+    "accuracy": 0.8931,
+    "cv_auc": 0.95,
+    "precision_phishing": 0.9228,
+    "recall_phishing": 0.7508,
+    "f1_phishing": 0.8279,
+    "confusion_matrix": {
+      "tn": 82817,
+      "fp": 2804,
+      "fn": 11121,
+      "tp": 33497
+    }
+  }
+}

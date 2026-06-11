@@ -167,6 +167,12 @@ nav.navbar.hidden {
 .conf-bar-fill.amber { background: linear-gradient(90deg, #d97706, #fbbf24); box-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
 .conf-bar-fill.red { background: linear-gradient(90deg, #b91c1c, #f87171); box-shadow: 0 0 10px rgba(248, 113, 113, 0.3); }
 
+/* Loading progress bar pulse animation */
+@keyframes scanPulse {
+  0%, 100% { width: 15%; opacity: 0.5; }
+  50% { width: 85%; opacity: 1; }
+}
+
 /* ── Animations ── */
 .reveal {
   opacity: 0;

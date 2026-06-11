@@ -2,7 +2,6 @@
 __pycache__
 *.pkl
 .pytest_cache
-.venv
 .env
 *.docx
 *.md

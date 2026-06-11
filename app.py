@@ -247,6 +247,46 @@ def _friendly_scan_warning(error_text: str) -> str:
     return text
 
 
+def _sanitize_error_message(error_text: str) -> str:
+    """Convert an internal error string into a short, user-safe message.
+
+    Routes through the existing friendly-warning mapper first.  If no match
+    is found, strips traceback frames, file paths, and overly long text so
+    the UI never shows raw internal diagnostics.
+    """
+    text = (error_text or "").strip()
+    if not text:
+        return "An internal processing error occurred."
+
+    # Defer to the existing friendly mapper when it knows this error
+    known = _friendly_scan_warning(text)
+    if known and known != text:
+        return known
+
+    # Looks like a full traceback -- keep only the final exception line
+    if "\n" in text:
+        lines = text.strip().split("\n")
+        for line in reversed(lines):
+            stripped = line.strip()
+            if stripped.startswith("File ") or stripped.startswith("  "):
+                continue
+            if "Traceback" in stripped:
+                continue
+            if stripped:
+                text = stripped
+                break
+
+    # Truncate anything still unreasonably long
+    if len(text) > 200:
+        text = text[:197] + "..."
+
+    # If the result is still a raw file-path dump, replace it entirely
+    if "/" in text and (".py" in text or "site-packages" in text):
+        return "An internal processing error occurred."
+
+    return text
+
+
 def compute_scan_confidence(scan: dict) -> dict:
     """Compute a 0-100 data-completeness score and per-layer breakdown."""
     reachability = scan.get("reachability", {}) or {}
@@ -507,7 +547,7 @@ def build_user_friendly_summary(scan: dict) -> dict:
         elif conf < 85:
             confidence_text = "Model confidence is good, but still verify before sharing sensitive data."
 
-    warnings = [_friendly_scan_warning(str(err)) for err in (scan.get("errors", []) or [])]
+    warnings = [_sanitize_error_message(str(err)) for err in (scan.get("errors", []) or [])]
 
     # --- Content-based threat analysis (Layer 2) ---
     content_analysis = scan.get("content_analysis") or {}
@@ -602,7 +642,12 @@ def index():
                     if scan.get("validation", {}).get("ok"):
                         add_to_history(url, friendly.get("level"), scan.get("prediction", {}).get("verdict", "Unknown"))
             except Exception as e:
-                pass
+                if jid in job_store:
+                    scan = empty_scan_response()
+                    scan["validation"] = {"ok": False, "normalized_url": url, "error": str(e)}
+                    scan["errors"] = [str(e)]
+                    job_store[jid]["scan"] = scan
+                    job_store[jid]["friendly"] = build_user_friendly_summary(scan)
             finally:
                 if jid in job_store:
                     job_store[jid]["done"] = True

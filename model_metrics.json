@@ -1,0 +1,45 @@
+{
+  "model": "random_forest",
+  "version": "2.1.0",
+  "cv_auc_mean": 0.95,
+  "test_metrics": {
+    "roc_auc": 0.9508,
+    "pr_auc": 0.9326,
+    "accuracy": 0.8931,
+    "macro_avg": {
+      "precision": 0.9022,
+      "recall": 0.859,
+      "f1": 0.8752
+    },
+    "weighted_avg": {
+      "precision": 0.8957,
+      "recall": 0.8931,
+      "f1": 0.8901
+    },
+    "benign_class": {
+      "precision": 0.8816,
+      "recall": 0.9673,
+      "f1": 0.9224,
+      "support": 85621
+    },
+    "phishing_class": {
+      "precision": 0.9228,
+      "recall": 0.7508,
+      "f1": 0.8279,
+      "support": 44618
+    },
+    "confusion_matrix": {
+      "format": "[[TN, FP], [FN, TP]]",
+      "values": [
+        [
+          82817,
+          2804
+        ],
+        [
+          11121,
+          33497
+        ]
+      ]
+    }
+  }
+}

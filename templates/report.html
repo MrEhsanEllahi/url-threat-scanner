@@ -50,12 +50,6 @@
     </div>
   </div>
 
-  <style>
-    @keyframes scanPulse {
-      0%, 100% { width: 15%; opacity: 0.5; }
-      50% { width: 85%; opacity: 1; }
-    }
-  </style>
   {% endif %}
 
   <!-- Error state -->
@@ -383,6 +377,7 @@
       const loadingHint = document.getElementById("loading-hint");
       const precheckContainer = document.getElementById("precheck-container");
       let precheckShown = false;
+      let pollCount = 0;
 
       function showPrecheckWarning(reason) {
         if (precheckShown || !precheckContainer) return;
@@ -409,6 +404,12 @@
       }
 
       const poll = setInterval(async () => {
+        pollCount++;
+        if (pollCount > 75) {
+          clearInterval(poll);
+          statusEl.textContent = "Scan is taking longer than expected. Try again or check the URL.";
+          return;
+        }
         try {
           const res = await fetch(`/api/scan/status/${jobId}`);
           if (res.ok) {
